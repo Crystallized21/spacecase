@@ -1,127 +1,47 @@
-import {ReactNode} from "react";
-import {cn} from "@/lib/utils";
-import {Menu} from "lucide-react";
-
-import Navigation from "../../ui/navigation";
-import {Button, type ButtonProps} from "../../ui/button";
-import {Navbar as NavbarComponent, NavbarLeft, NavbarRight,} from "../../ui/navbar";
-import {Sheet, SheetContent, SheetTrigger} from "../../ui/sheet";
+import { Button } from "../../ui/button";
+import {
+  Navbar as NavbarComponent,
+  NavbarLeft,
+  NavbarRight,
+} from "../../ui/navbar";
 import LaunchUI from "../../logos/launch-ui";
+import Link from "next/link";
+import {SignedIn, SignedOut, SignInButton, UserButton} from "@clerk/nextjs";
 import {ModeToggle} from "@/components/ModeToggle";
 
-interface NavbarLink {
-  text: string;
-  href: string;
-}
-
-interface NavbarActionProps {
-  text: string;
-  href: string;
-  variant?: ButtonProps["variant"];
-  icon?: ReactNode;
-  iconRight?: ReactNode;
-  isButton?: boolean;
-}
-
-interface NavbarProps {
-  logo?: ReactNode;
-  name?: string;
-  homeUrl?: string;
-  mobileLinks?: NavbarLink[];
-  actions?: NavbarActionProps[];
-  showNavigation?: boolean;
-  customNavigation?: ReactNode;
-  className?: string;
-}
-
-export default function HeroNavBar({
-  logo = <LaunchUI/>,
-  name = "Launch UI",
-  homeUrl = "https://www.launchuicomponents.com/",
-  mobileLinks = [],
-  actions = [
-    {
-      text: "Sign In",
-      href: "/",
-      isButton: true,
-      variant: "default",
-    },
-  ],
-  showNavigation = false,
-  customNavigation,
-  className,
-}: NavbarProps) {
+export default function HeroNavBar() {
   return (
-    <header className={cn("sticky top-0 z-50 -mb-4 px-4 pb-4", className)}>
-      <div className="fade-bottom bg-background/15 absolute left-0 h-24 w-full backdrop-blur-lg"></div>
-      <div className="max-w-container relative mx-auto">
+    <header className="sticky top-0 z-50 -mb-4 px-4 pb-4">
+      <div className="fade-bottom absolute left-0 h-24 w-full bg-background/15 backdrop-blur-lg"></div>
+      <div className="relative mx-auto max-w-container">
         <NavbarComponent>
           <NavbarLeft>
-            <a
-              href={homeUrl}
+            <Link
+              href="/"
               className="flex items-center gap-2 text-xl font-bold"
             >
-              {logo}
-              {name}
-            </a>
-            {showNavigation && (customNavigation || <Navigation/>)}
+              <LaunchUI/>
+              SpaceCase
+            </Link>
             <ModeToggle/>
           </NavbarLeft>
           <NavbarRight>
-            {actions.map((action, index) =>
-              action.isButton ? (
-                <Button
-                  key={index}
-                  variant={action.variant || "default"}
-                  asChild
-                >
-                  <a href={action.href}>
-                    {action.icon}
-                    {action.text}
-                    {action.iconRight}
-                  </a>
-                </Button>
-              ) : (
-                <a
-                  key={index}
-                  href={action.href}
-                  className="hidden text-sm md:block"
-                >
-                  {action.text}
-                </a>
-              ),
-            )}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 md:hidden"
-                >
-                  <Menu className="size-5"/>
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <nav className="grid gap-6 text-lg font-medium">
-                  <a
-                    href={homeUrl}
-                    className="flex items-center gap-2 text-xl font-bold"
-                  >
-                    <span>{name}</span>
-                  </a>
-                  {mobileLinks.map((link, index) => (
-                    <a
-                      key={index}
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      {link.text}
-                    </a>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
+            <SignedOut>
+              <Button variant="default" asChild>
+                <SignInButton/>
+              </Button>
+            </SignedOut>
+            <SignedIn>
+              <
+                UserButton
+                showName={true}
+                appearance={{
+                  elements: {
+                    userButtonOuterIdentifier: 'dark:text-white'
+                  }
+                }}
+              />
+            </SignedIn>
           </NavbarRight>
         </NavbarComponent>
       </div>
