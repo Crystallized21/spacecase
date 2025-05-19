@@ -16,6 +16,3 @@ jobs:
           vercel-org-id: ${{secrets.VERCEL_ORG_ID}}
           vercel-project-id: ${{secrets.VERCEL_PROJECT_ID}}
           vercel-args: --prod --confirm
-      - name: preview-url
-        run: |
-          echo "Production Deployment URL: ${{ steps.vercel-deploy.outputs.deployment-url }}"
