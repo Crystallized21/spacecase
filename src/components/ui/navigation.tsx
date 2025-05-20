@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ import {
   navigationMenuTriggerStyle,
 } from "./navigation-menu";
 import LaunchUI from "../logos/launch-ui";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface ComponentItem {
   title: string;

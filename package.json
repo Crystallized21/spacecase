@@ -7,7 +7,7 @@
     "build": "next build",
     "buildTurbo": "next build --turbo",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "biome lint ./src"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.4",
