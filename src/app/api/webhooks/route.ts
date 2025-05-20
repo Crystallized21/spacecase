@@ -1,13 +1,18 @@
 import {verifyWebhook} from "@clerk/nextjs/webhooks";
-import {NextRequest} from "next/server";
+import type {NextRequest} from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import {createClient} from "@supabase/supabase-js";
 
 // Setup Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  Sentry.captureException(new Error("Missing Supabase environment variables"));
+  throw new Error("Missing Supabase environment variables");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,6 +51,11 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(`✅ Added ${isDev ? "dev" : "teacher"} ${email} to Supabase.`);
+
+        // If user already exists in Supabase, throw a log.
+        if (error?.code === "23505") {
+          console.log(`⚠️ User ${email} already exists in Supabase.`);
+        }
       } else {
         console.log("🚫 Not a teacher, skipping Supabase insert.");
       }

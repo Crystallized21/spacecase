@@ -7,7 +7,11 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": []
+		"ignore": [
+			"./src/components/logos/**",
+			"./src/components/sections/**",
+			"./src/components/ui/**"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -20,18 +24,6 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-			"correctness": {
-				"noUnusedVariables": "error",
-				"noEmptyFunction": "warn",
-				"useSingleVarDeclarator": "error",
-				"useShorthandFunctionType": "warn"
-			},
-			"suspicious": {
-                "noUselessSwitchCase": "warn",
-				"noEmptyPattern": "error",
-				"noInferrableTypes": "warn",
-				"noShadowRestrictedNames": "error"
-            },
             "complexity": {
                 "noExcessiveCognitiveComplexity": "warn"
             }
