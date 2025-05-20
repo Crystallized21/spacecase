@@ -23,21 +23,27 @@ export async function POST(req: NextRequest) {
       "first_name" in user &&
       "last_name" in user
     ) {
+      // Check if the user is a teacher or dev
       const email = user.email_addresses[0].email_address.toLowerCase();
       const isDev = email.startsWith("st23030");
       const isTeacher = !email.startsWith("st") && email.endsWith("@ormiston.school.nz");
 
+      // If the user is a teacher or dev, insert them into Supabase
       if (isTeacher || isDev) {
         const {error} = await supabase.from("users").insert([
           {
-            id: user.id,
+            user_id: user.id,
+            name: `${user.first_name} ${user.last_name}`,
             email,
-            full_name: `${user.first_name} ${user.last_name}`,
             created_at: new Date().toISOString(),
+            role: "teacher",
           },
         ]);
 
-        if (error) throw error;
+        if (error) {
+          Sentry.captureException(error);
+          console.log(error)
+        }
 
         console.log(`✅ Added ${isDev ? "dev" : "teacher"} ${email} to Supabase.`);
       } else {
