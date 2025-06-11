@@ -10,7 +10,7 @@ export default function Dashboard() {
     {
       id: 1,
       period: "Period X",
-      subject: "LA /ITtime",
+      subject: "LA / Itime",
       time: "9:00am - 10:30am",
       duration: "XXmins",
       line: "Line 1",
