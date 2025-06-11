@@ -1,8 +1,11 @@
-import {ChevronDown, Rocket, User} from "lucide-react"
+import {ChevronDown, Rocket} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import {SignedIn, UserButton, useUser} from "@clerk/nextjs"
 
 export function Header() {
+  const {isLoaded} = useUser();
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -30,8 +33,22 @@ export function Header() {
             <span className="text-gray-700">Settings</span>
           </div>
         </nav>
-        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-          <User className="h-6 w-6 text-white"/>
+        <div>
+          {isLoaded ? (
+            <SignedIn>
+              <
+                UserButton
+                showName={true}
+                appearance={{
+                  elements: {
+                    userButtonOuterIdentifier: 'dark:text-white'
+                  }
+                }}
+              />
+            </SignedIn>
+          ) : (
+            <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"/>
+          )}
         </div>
       </div>
     </header>
