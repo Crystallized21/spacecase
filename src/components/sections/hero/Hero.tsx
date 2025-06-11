@@ -76,7 +76,7 @@ export default function Hero({
             </SignedOut>
             <SignedIn>
               <Button variant="default" size="lg" asChild>
-                <a href="/">
+                <a href="/dashboard">
                   Go to Dashboard
                   <ArrowRightIcon className="ml-2 size-5"/>
                 </a>
