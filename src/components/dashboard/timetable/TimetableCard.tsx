@@ -13,8 +13,8 @@ export function TimetableCard({ entries }: TimetableCardProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-semibold">Timetable</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">Wednesday 26th February → Week 4</p>
+            <h1 className="text-2xl font-semibold">Timetable</h1>
+            <p className="text-m text-gray-600 mt-1">Wednesday 26th February → Week 4</p>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="lg" className="flex items-center space-x-1">
