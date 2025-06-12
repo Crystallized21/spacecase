@@ -5,7 +5,7 @@ import {TimetableCard} from "@/components/dashboard/timetable/TimetableCard"
 import {NoticesCard} from "@/components/dashboard/NoticesCard"
 import type {TimetableEntryProps} from "@/components/dashboard/timetable/TimetableEntry"
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const timetableEntries: TimetableEntryProps[] = [
     {
       id: 1,
