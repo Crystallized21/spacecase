@@ -114,7 +114,6 @@
   --brand-foreground: oklch(75.77% 0.159 55.91);
 
   /* Customized shadcn/ui colors */
-  --background: oklch(97.65% 0.001 17.18);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
