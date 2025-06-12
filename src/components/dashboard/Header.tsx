@@ -10,6 +10,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import Link from "next/link";
 
 export function Header() {
   const {isLoaded} = useUser()
@@ -27,6 +28,7 @@ export function Header() {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuLink
+                  href="/dashboard"
                   className="font-medium text-gray-900 px-3 py-2 cursor-pointer">Dashboard</NavigationMenuLink>
               </NavigationMenuItem>
 
@@ -35,14 +37,17 @@ export function Header() {
                 <NavigationMenuContent>
                   <div className="grid gap-4 py-2 w-[200px]">
                     <NavigationMenuLink
+                      href="/bookings/view"
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
                       <div className="text-sm font-medium leading-none">View Bookings</div>
                     </NavigationMenuLink>
                     <NavigationMenuLink
+                      href="/bookings/new"
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
                       <div className="text-sm font-medium leading-none">New Booking</div>
                     </NavigationMenuLink>
                     <NavigationMenuLink
+                      href="/bookings/history"
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
                       <div className="text-sm font-medium leading-none">Booking History</div>
                     </NavigationMenuLink>
