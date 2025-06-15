@@ -56,7 +56,10 @@ export function Header() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuLink className="text-gray-700 hover:text-gray-900 px-3 py-2 cursor-pointer">
+                <NavigationMenuLink
+                  href="/timetable"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 cursor-pointer"
+                >
                   Timetable
                 </NavigationMenuLink>
               </NavigationMenuItem>
