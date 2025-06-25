@@ -21,13 +21,13 @@ export default function BookingPage() {
   const [formData, setFormData] = useState({
     subject: "",
     room: "",
-    date: null as Date | null,
+    date: undefined as Date | undefined,
     slot: "",
     justification: ""
   });
 
-  const handleChange = (key: string, value: string | Date | null) => {
-    setFormData({...formData, [key]: value});
+  const handleChange = (key: string, value: string | Date | undefined) => {
+    setFormData({ ...formData, [key]: value });
   };
 
   const handleSubmit = () => {
@@ -105,9 +105,8 @@ export default function BookingPage() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.date || undefined}
+                    selected={formData.date}
                     onSelect={(date) => handleChange("date", date)}
-                    initialFocus
                     disabled={[
                       {before: new Date()}, // Disable past dates
                       {dayOfWeek: [0, 6]}   // Disable weekends
