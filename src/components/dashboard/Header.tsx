@@ -10,7 +10,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import Link from "next/link";
 
 export function Header() {
   const {isLoaded} = useUser()
@@ -37,14 +36,14 @@ export function Header() {
                 <NavigationMenuContent>
                   <div className="grid gap-4 py-2 px-2 w-[200px]">
                     <NavigationMenuLink
-                      href="/bookings/view"
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
-                      <div className="text-sm font-medium leading-none flex items-center gap-2"><Eye className="h-4 w-4"/> View Bookings</div>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink
                       href="/bookings/new"
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
                       <div className="text-sm font-medium leading-none flex items-center gap-2"><NotebookPen className="h-4 w-4"/>New Booking</div>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink
+                      href="/bookings/view"
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer">
+                      <div className="text-sm font-medium leading-none flex items-center gap-2"><Eye className="h-4 w-4"/> View Bookings</div>
                     </NavigationMenuLink>
                     <NavigationMenuLink
                       href="/bookings/history"
