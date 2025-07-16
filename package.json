@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "devNoTurbopack": "next dev",
     "build": "next build",
-    "buildTurbo": "next build --turbo",
+    "buildTurbo": "next build --turbopack",
     "start": "next start",
     "lint": "biome lint ./src"
   },
