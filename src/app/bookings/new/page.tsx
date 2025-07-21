@@ -12,6 +12,8 @@ import {Calendar} from "@/components/ui/calendar";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {format} from "date-fns";
 import {cn} from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
+import {router} from "next/client";
 
 const dummyRooms = ["Pukeko Commons - Room 1", "Pukeko Commons - Room 2", "Kahikatea Commons - Presentation Room"];
 const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
@@ -30,9 +32,32 @@ export default function BookingPage() {
     setFormData({ ...formData, [key]: value });
   };
 
-  const handleSubmit = () => {
-    console.log("Booking submitted:", formData);
-    // insert mutation logic here (eg. Supabase or API call)
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create booking');
+      }
+
+      // Show success message
+      alert('Booking created successfully!');
+
+      router.push('/bookings/view');
+
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      alert('Failed to create booking. Please try again.');
+      Sentry.captureException(error);
+    }
   };
 
   return (
