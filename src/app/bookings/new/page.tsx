@@ -1,13 +1,13 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Header} from "@/components/dashboard/Header";
 import {Textarea} from "@/components/ui/textarea";
-import {BookOpenIcon, CalendarIcon, ClockIcon, MapPinIcon, ScrollTextIcon} from "lucide-react";
+import {BookOpenIcon, Building, CalendarIcon, ClockIcon, MapPinIcon, ScrollTextIcon} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {format} from "date-fns";
@@ -19,7 +19,17 @@ const dummyRooms = ["Pukeko Commons - Room 1", "Pukeko Commons - Room 2", "Kahik
 const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
 const dummySubjects = ["English", "Maths", "Science"];
 
+export default function xBookingPage() {
 export default function BookingPage() {
+  const [commons, setCommons] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/bookings/commons")
+      .then(res => res.json())
+      .then(data => setCommons(data))
+      .catch(() => setCommons([]));
+  }, []);
+
   const [formData, setFormData] = useState({
     subject: "",
     room: "",
@@ -29,7 +39,7 @@ export default function BookingPage() {
   });
 
   const handleChange = (key: string, value: string | Date | undefined) => {
-    setFormData({ ...formData, [key]: value });
+    setFormData({...formData, [key]: value});
   };
 
   const handleSubmit = async () => {
@@ -87,6 +97,23 @@ export default function BookingPage() {
                 <SelectContent>
                   {dummySubjects.map((subject) => (
                     <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-primary"/>
+                Common
+              </Label>
+              <Select onValueChange={(val) => handleChange("common", val)}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Select Common"/>
+                </SelectTrigger>
+                <SelectContent>
+                  {commons.map((common) => (
+                    <SelectItem key={common} value={common}>{common}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
