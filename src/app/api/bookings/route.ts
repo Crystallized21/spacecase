@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
     Sentry.setUser({id: user.id, email: user.emailAddresses?.[0]?.emailAddress});
 
     const userName = `${user.firstName} ${user.lastName}`.trim();
-    console.log(userName);
 
     Sentry.addBreadcrumb({
       category: "db",
@@ -94,15 +93,23 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
+      console.error("Supabase insert error:", error, {
+        user_id: userData.user_id,
+        date,
+        slot,
+        justification
+      });
       Sentry.captureException(error, {
         extra: {
           context: "Database insert operation",
           operation: "bookings.insert",
-          payload: body
+          payload: body,
+          user: user,
+          userData: userData
         }
       });
       return NextResponse.json(
-        {error: "Failed to create booking"},
+        {error: "Failed to create booking", details: error.message},
         {status: 500}
       );
     }
@@ -113,14 +120,16 @@ export async function POST(request: NextRequest) {
     }, {status: 201});
 
   } catch (error) {
+    console.error("POST /api/bookings 500 error:", error);
     Sentry.captureException(error, {
       extra: {
         endpoint: "/api/bookings",
-        method: "POST"
+        method: "POST",
+        requestBody: await request.text()
       }
     });
     return NextResponse.json(
-      {error: "Internal server error"},
+      {error: "Internal server error", details: error instanceof Error ? error.message : String(error)},
       {status: 500}
     );
   }
