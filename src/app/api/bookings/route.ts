@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {subject, room, date, slot, justification} = body;
+    const {subject, room, common, date, slot, justification} = body;
 
     if (!subject || !room || !date || !slot) {
       Sentry.addBreadcrumb({
@@ -72,6 +72,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {error: "Missing required fields"},
         {status: 400}
+      );
+    }
+
+    // look up common_id from the common name
+    // First get the common_id
+    const {data: commonData, error: commonError} = await supabase
+      .from("commons")
+      .select("id")
+      .eq("name", common)
+      .single();
+
+    if (commonError || !commonData) {
+      return NextResponse.json(
+        {error: "Common not found in database"},
+        {status: 404}
+      );
+    }
+
+    // then look up the room_id from the room name
+    const {data: roomData, error: roomError} = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("name", room)
+      .eq("common_id", commonData.id)
+      .single();
+    console.log("Room lookup result:", roomData, roomError);
+
+    if (roomError || !roomData) {
+      Sentry.addBreadcrumb({
+        category: "db",
+        message: "Room not found in database",
+        level: "warning"
+      });
+      return NextResponse.json(
+        {error: "Room not found in database"},
+        {status: 404}
       );
     }
 
@@ -86,7 +122,7 @@ export async function POST(request: NextRequest) {
       .from("bookings")
       .insert({
         user_id: userData.user_id,
-        subject_id: subject,
+        room_id: roomData.id,
         date: new Date(date).toISOString().split('T')[0],
         period: slot,
         subject_id: subject,

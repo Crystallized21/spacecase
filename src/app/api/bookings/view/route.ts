@@ -120,8 +120,8 @@ export async function GET() {
         date: b.date,
         time: b.period,
         notes: b.justification,
-        room: b.rooms?.[0]?.name || "",
-        commons: b.rooms?.[0]?.commons?.[0]?.name || "",
+        room: b.rooms?.name || "",
+        commons: b.rooms?.commons?.name || "",
         subject: b.subjects?.name || "",
         subjectCode: b.subjects?.code || "",
       };
