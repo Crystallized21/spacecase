@@ -15,13 +15,21 @@ import {cn} from "@/lib/utils";
 import * as Sentry from "@sentry/nextjs";
 import {router} from "next/client";
 
-const dummyRooms = ["Pukeko Commons - Room 1", "Pukeko Commons - Room 2", "Kahikatea Commons - Presentation Room"];
 const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
 const dummySubjects = ["English", "Maths", "Science"];
 
-export default function xBookingPage() {
 export default function BookingPage() {
+  const [formData, setFormData] = useState({
+    subject: "",
+    common: "",
+    room: "",
+    date: undefined as Date | undefined,
+    slot: "",
+    justification: ""
+  });
+
   const [commons, setCommons] = useState<string[]>([]);
+  const [rooms, setRooms] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/bookings/commons")
@@ -30,13 +38,16 @@ export default function BookingPage() {
       .catch(() => setCommons([]));
   }, []);
 
-  const [formData, setFormData] = useState({
-    subject: "",
-    room: "",
-    date: undefined as Date | undefined,
-    slot: "",
-    justification: ""
-  });
+  useEffect(() => {
+    if (!formData.common) {
+      setRooms([]);
+      return;
+    }
+    fetch(`/api/bookings/rooms?common=${encodeURIComponent(formData.common)}`)
+      .then(res => res.json())
+      .then(data => setRooms(data))
+      .catch(() => setRooms([]));
+  }, [formData.common]);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData({...formData, [key]: value});
@@ -129,7 +140,7 @@ export default function BookingPage() {
                   <SelectValue placeholder="Select room"/>
                 </SelectTrigger>
                 <SelectContent>
-                  {dummyRooms.map((room) => (
+                  {rooms.map((room) => (
                     <SelectItem key={room} value={room}>{room}</SelectItem>
                   ))}
                 </SelectContent>
