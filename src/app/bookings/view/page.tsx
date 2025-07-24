@@ -229,10 +229,10 @@ export default function ViewBookingPage() {
                             {format(new Date(booking.date), "MMM dd, yyyy")}
                             <div className="text-sm text-gray-500">
                               {slotDef
-                                ? `Period ${slotDef.number} (${formatTime(
+                                ? `Slot ${slotDef.number} (${formatTime(
                                   slotDef.startTime
                                 )}–${formatTime(slotDef.endTime)})`
-                                : `Period ${booking.time}`}
+                                : `Slot ${booking.time}`}
                             </div>
                           </div>
                         </TableCell>
