@@ -16,7 +16,6 @@ import * as Sentry from "@sentry/nextjs";
 import {useRouter} from "next/navigation";
 
 const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
-const dummySubjects = ["English", "Maths", "Science"];
 
 export default function BookingPage() {
   const router = useRouter();
@@ -34,7 +33,9 @@ export default function BookingPage() {
 
   const [commons, setCommons] = useState<string[]>([]);
   const [rooms, setRooms] = useState<string[]>([]);
+  const [subjects, setSubjects] = useState<Array<{id: string, name: string, code?: string}>>([]);
 
+  // common subjects for the select dropdown
   useEffect(() => {
     fetch("/api/bookings/commons")
       .then(res => res.json())
@@ -42,6 +43,7 @@ export default function BookingPage() {
       .catch(() => setCommons([]));
   }, []);
 
+  // rooms based on selected common
   useEffect(() => {
     if (!formData.common) {
       setRooms([]);
@@ -52,6 +54,17 @@ export default function BookingPage() {
       .then(data => setRooms(data))
       .catch(() => setRooms([]));
   }, [formData.common]);
+
+  // subjects for the select dropdown
+  useEffect(() => {
+    fetch("/api/bookings/subjects")
+      .then(res => res.json())
+      .then(data => setSubjects(data))
+      .catch(error => {
+        console.error("Error fetching subjects:", error);
+        setSubjects([]);
+      });
+  }, []);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData({...formData, [key]: value});
@@ -110,8 +123,10 @@ export default function BookingPage() {
                   <SelectValue placeholder="Select subject"/>
                 </SelectTrigger>
                 <SelectContent>
-                  {dummySubjects.map((subject) => (
-                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.code ? `${subject.code} - ${subject.name}` : subject.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
