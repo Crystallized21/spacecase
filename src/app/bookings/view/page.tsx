@@ -46,7 +46,7 @@ export default function ViewBookingPage() {
     const fetchBookings = async () => {
       setLoading(true)
       try {
-        const res = await fetch("/api/bookings/view")
+        const res = await fetch("/api/bookings")
         if (!res.ok) throw new Error("Failed to fetch bookings")
         const data = await res.json()
         const bookingsData: Booking[] = data.map((b: Booking) => ({
