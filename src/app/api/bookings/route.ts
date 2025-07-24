@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         user_id: userData.user_id,
         room_id: roomData.id,
         date: new Date(date).toISOString().split('T')[0],
-        period: slot,
+        period: Number(slot),
         subject_id: subject,
         justification: justification || null
       })
