@@ -19,6 +19,8 @@ const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-
 const dummySubjects = ["English", "Maths", "Science"];
 
 export default function BookingPage() {
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     subject: "",
     common: "",
@@ -54,6 +56,7 @@ export default function BookingPage() {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
       const response = await fetch('/api/bookings', {
         method: 'POST',
@@ -69,15 +72,14 @@ export default function BookingPage() {
         throw new Error(result.error || 'Failed to create booking');
       }
 
-      // Show success message
       alert('Booking created successfully!');
-
       router.push('/bookings/view');
-
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Failed to create booking. Please try again.');
       Sentry.captureException(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -213,9 +215,9 @@ export default function BookingPage() {
               <Button
                 className="w-full py-6 text-md font-medium"
                 onClick={handleSubmit}
-                disabled={!formData.subject || !formData.room || !formData.date || !formData.slot}
+                disabled={loading || !formData.subject || !formData.room || !formData.date || !formData.slot}
               >
-                Submit Booking
+                {loading ? "Submitting..." : "Submit Booking"}
               </Button>
             </div>
           </CardContent>
