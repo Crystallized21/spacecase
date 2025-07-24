@@ -122,8 +122,8 @@ export async function GET() {
         notes: b.justification,
         room: b.rooms?.[0]?.name || "",
         commons: b.rooms?.[0]?.commons?.[0]?.name || "",
-        subject: b.subjects?.[0]?.name || "",
-        subjectCode: b.subjects?.[0]?.code || "",
+        subject: b.subjects?.name || "",
+        subjectCode: b.subjects?.code || "",
       };
     });
 

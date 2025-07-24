@@ -86,8 +86,10 @@ export async function POST(request: NextRequest) {
       .from("bookings")
       .insert({
         user_id: userData.user_id,
+        subject_id: subject,
         date: new Date(date).toISOString().split('T')[0],
         period: slot,
+        subject_id: subject,
         justification: justification || null
       })
       .select();
