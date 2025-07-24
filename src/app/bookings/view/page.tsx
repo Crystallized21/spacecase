@@ -44,21 +44,6 @@ export default function ViewBookingPage() {
                   className="pl-8"
                 />
               </div>
-              <Select
-                value={statusFilter || undefined}
-                onValueChange={v => setStatusFilter(v || null)}
-              >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Filter by status"/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
             </div>
             <Button className="whitespace-nowrap" asChild>
               <Link href="/bookings/new">
