@@ -13,12 +13,14 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {format} from "date-fns";
 import {cn} from "@/lib/utils";
 import * as Sentry from "@sentry/nextjs";
-import {router} from "next/client";
+import {useRouter} from "next/navigation";
 
 const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
 const dummySubjects = ["English", "Maths", "Science"];
 
 export default function BookingPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
