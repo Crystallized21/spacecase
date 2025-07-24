@@ -1,7 +1,6 @@
 "use client"
 
 import {Header} from "@/components/dashboard/Header"
-import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
@@ -10,6 +9,7 @@ import * as Sentry from "@sentry/nextjs";
 import {format} from "date-fns"
 import {ChevronLeft, ChevronRight, Eye, Loader2, Pencil, Plus, Search} from "lucide-react"
 import {useEffect, useState} from "react"
+import Link from "next/link";
 
 interface Booking {
   id: string
@@ -17,9 +17,11 @@ interface Booking {
   teacherEmail: string
   date: string
   time: string
-  status: "confirmed" | "pending" | "cancelled"
-  roomType: string
   notes?: string
+  room?: string
+  commons?: string
+  subject?: string
+  subjectCode?: string
 }
 
 export default function ViewBookingPage() {
@@ -31,37 +33,34 @@ export default function ViewBookingPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const pageSize = 10
 
-  // mock data fetching 
   useEffect(() => {
     const fetchBookings = async () => {
+      setLoading(true)
       try {
-        // mock data
-        const mockData: Booking[] = [
-          {
-            id: "1",
-            teacherName: "John Doe",
-            teacherEmail: "john@example.com",
-            date: "2023-06-15",
-            time: "14:00",
-            status: "confirmed",
-            roomType: "Kea Pod"
-          },
-          {
-            id: "2",
-            teacherName: "Jane Smith",
-            teacherEmail: "jane@example.com",
-            date: "2023-06-16",
-            time: "10:30",
-            status: "pending",
-            roomType: "Waka Commons"
-          },
-          // maybe add more mock data here
-        ]
+        const res = await fetch("/api/bookings/view")
+        if (!res.ok) {
+          throw new Error("Failed to fetch bookings")
+        }
 
-        setBookings(mockData)
-        setFilteredBookings(mockData)
+        const data = await res.json()
+
+        const bookingsData: Booking[] = (data || []).map((b: Booking) => ({
+          id: b.id,
+          teacherName: b.teacherName,
+          teacherEmail: b.teacherEmail,
+          date: b.date,
+          time: b.time,
+          notes: b.notes,
+          room: b.room ?? "",
+          commons: b.commons ?? "",
+          subject: b.subject ?? "",
+          subjectCode: b.subjectCode ?? ""
+        }))
+
+        setBookings(bookingsData)
+        setFilteredBookings(bookingsData)
       } catch (error) {
-        Sentry.captureException(error);
+        Sentry.captureException(error)
         console.error("Failed to fetch bookings:", error)
       } finally {
         setLoading(false)
@@ -71,7 +70,6 @@ export default function ViewBookingPage() {
     fetchBookings()
   }, [])
 
-  // Handle search and filtering
   useEffect(() => {
     let result = bookings
 
@@ -81,19 +79,17 @@ export default function ViewBookingPage() {
         booking =>
           booking.teacherName.toLowerCase().includes(searchLower) ||
           booking.teacherEmail.toLowerCase().includes(searchLower) ||
-          booking.roomType.toLowerCase().includes(searchLower)
+          (booking.room ?? "").toLowerCase().includes(searchLower) ||
+          (booking.commons ?? "").toLowerCase().includes(searchLower) ||
+          (booking.subject ?? "").toLowerCase().includes(searchLower) ||
+          (booking.subjectCode ?? "").toLowerCase().includes(searchLower)
       )
-    }
-
-    if (statusFilter) {
-      result = result.filter(booking => booking.status === statusFilter)
     }
 
     setFilteredBookings(result)
     setCurrentPage(1)
-  }, [search, statusFilter, bookings])
+  }, [search, bookings])
 
-  // Pagination logic
   const paginatedData = filteredBookings.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
@@ -113,20 +109,6 @@ export default function ViewBookingPage() {
     }
   }
 
-  // Status badge variant mapping
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "default"
-      case "pending":
-        return "outline"
-      case "cancelled":
-        return "destructive"
-      default:
-        return "secondary"
-    }
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header/>
@@ -139,7 +121,7 @@ export default function ViewBookingPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500"/>
                 <Input
-                  placeholder="Search by teacher, room, or time."
+                  placeholder="Search by teacher, room, subject, or time."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8"
@@ -161,9 +143,11 @@ export default function ViewBookingPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="whitespace-nowrap">
-              <Plus className="h-4 w-4 mr-2"/>
-              New Booking
+            <Button className="whitespace-nowrap" asChild>
+              <Link href="/bookings/new">
+                <Plus className="h-4 w-4 mr-2"/>
+                New Booking
+              </Link>
             </Button>
           </div>
         </div>
@@ -178,9 +162,9 @@ export default function ViewBookingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Teacher</TableHead>
-                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Subject</TableHead>
                   <TableHead>Room & Kainga</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Date & Time</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -196,15 +180,21 @@ export default function ViewBookingPage() {
                       </TableCell>
                       <TableCell>
                         <div>
+                          <div className="font-medium">{booking.subject}</div>
+                          <div className="text-sm text-gray-500">{booking.subjectCode}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{booking.room}</div>
+                          <div className="text-sm text-gray-500">{booking.commons}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
                           {format(new Date(booking.date), "MMM dd, yyyy")}
                           <div className="text-sm text-gray-500">{booking.time}</div>
                         </div>
-                      </TableCell>
-                      <TableCell>{booking.roomType}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(booking.status)}>
-                          {booking.status.toUpperCase()}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
