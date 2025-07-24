@@ -15,7 +15,6 @@ import {cn} from "@/lib/utils";
 import * as Sentry from "@sentry/nextjs";
 import {useRouter} from "next/navigation";
 
-const dummySlots = ["Slot 1 (8:00-9:30)", "Slot 2 (9:45-11:15)", "Slot 3 (11:30-13:00)", "Slot 4 (13:15-14:45)", "Slot 5 (15:00-16:30)"];
 
 export default function BookingPage() {
   const router = useRouter();
@@ -33,7 +32,23 @@ export default function BookingPage() {
 
   const [commons, setCommons] = useState<string[]>([]);
   const [rooms, setRooms] = useState<string[]>([]);
-  const [subjects, setSubjects] = useState<Array<{id: string, name: string, code?: string}>>([]);
+  const [subjects, setSubjects] = useState<Array<{ id: string, name: string, code?: string }>>([]);
+  const [slots, setSlots] = useState<Array<{
+    id: number;
+    number: number;
+    day: string;
+    startTime: string;
+    endTime: string;
+  }>>([]);
+
+  // format time for display
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = Number.parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
 
   // common subjects for the select dropdown
   useEffect(() => {
@@ -65,6 +80,31 @@ export default function BookingPage() {
         setSubjects([]);
       });
   }, []);
+
+  // slots based on selected date
+  useEffect(() => {
+    if (!formData.date) {
+      setSlots([]);
+      return;
+    }
+
+    const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
+
+    fetch(`/api/bookings/slots?day=${encodeURIComponent(dayName)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSlots(data);
+        } else {
+          console.error("Unexpected data format:", data);
+          setSlots([]);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching slots:", error);
+        setSlots([]);
+      });
+  }, [formData.date]);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData({...formData, [key]: value});
@@ -203,16 +243,24 @@ export default function BookingPage() {
                 <ClockIcon className="h-4 w-4 text-primary"/>
                 Time Slot
               </Label>
-              <Select onValueChange={(val) => handleChange("slot", val)}>
+              <Select
+                onValueChange={(val) => handleChange("slot", val)}
+                disabled={!formData.date}
+              >
                 <SelectTrigger className="bg-white">
                   <SelectValue placeholder="Select time slot"/>
                 </SelectTrigger>
                 <SelectContent>
-                  {dummySlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                  {slots.map((slot) => (
+                    <SelectItem key={slot.id} value={slot.number.toString()}>
+                      Period {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {!formData.date && (
+                <p className="text-sm text-gray-500 mt-1">Please select a date first</p>
+              )}
             </div>
 
             <div className="space-y-2">
