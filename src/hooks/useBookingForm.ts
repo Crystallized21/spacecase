@@ -19,7 +19,13 @@ interface Slot {
 
 export function useBookingForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+
+  // Separate loading states
+  const [loadingCommons, setLoadingCommons] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -38,22 +44,22 @@ export function useBookingForm() {
 
   // Fetch commons
   useEffect(() => {
-    setLoading(true);
+    setLoadingCommons(true);
     fetch("/api/bookings/commons")
       .then(res => res.json())
       .then(data => setCommons(data))
       .catch(() => setCommons([]))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingCommons(false));
   }, []);
 
   // Fetch subjects
   useEffect(() => {
-    setLoading(true);
+    setLoadingSubjects(true);
     fetch("/api/bookings/subjects")
       .then(res => res.json())
       .then(data => setSubjects(data))
       .catch(() => setSubjects([]))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingSubjects(false));
   }, []);
 
   // Fetch rooms when a common is selected
@@ -63,12 +69,12 @@ export function useBookingForm() {
       setFormData(prev => ({...prev, room: ""}));
       return;
     }
-    setLoading(true);
+    setLoadingRooms(true);
     fetch(`/api/bookings/rooms?common=${encodeURIComponent(formData.common)}`)
       .then(res => res.json())
       .then(data => setRooms(data))
       .catch(() => setRooms([]))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingRooms(false));
   }, [formData.common]);
 
   // Fetch slots when a date is selected
@@ -79,19 +85,19 @@ export function useBookingForm() {
       return;
     }
     const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
-    setLoading(true);
+    setLoadingSlots(true);
     fetch(`/api/bookings/slots?day=${encodeURIComponent(dayName)}`)
       .then(res => res.json())
       .then(data => Array.isArray(data) ? setSlots(data) : setSlots([]))
       .catch(() => setSlots([]))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingSlots(false));
   }, [formData.date]);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData(prev => ({...prev, [key]: value}));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (opts?: { onSuccess?: () => void }) => {
     setIsSubmitting(true);
     try {
       // Split subject value to get UUID and line
@@ -99,8 +105,8 @@ export function useBookingForm() {
       let line = "";
       if (formData.subject.includes("-")) {
         const parts = formData.subject.split("-");
-        subjectId = parts.slice(0, 5).join("-"); // UUID is 5 parts
-        line = parts.slice(5).join("-"); // Line number
+        subjectId = parts.slice(0, 5).join("-");
+        line = parts.slice(5).join("-");
       }
 
       const payload = {
@@ -116,11 +122,14 @@ export function useBookingForm() {
       });
 
       const result = await response.json();
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to create booking');
       }
 
-      alert('Booking created successfully!');
+      if (opts?.onSuccess)
+          opts.onSuccess();
+      await new Promise(resolve => setTimeout(resolve, 1500));
       router.push('/bookings/view');
     } catch (error) {
       console.error('Error submitting booking:', error);
@@ -130,8 +139,12 @@ export function useBookingForm() {
       setIsSubmitting(false);
     }
   };
+
   return {
-    loading,
+    loadingCommons,
+    loadingSubjects,
+    loadingRooms,
+    loadingSlots,
     isSubmitting,
     formData,
     commons,
