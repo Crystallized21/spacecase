@@ -1,4 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
+import {auth, currentUser} from "@clerk/nextjs/server";
 import {type NextRequest, NextResponse} from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
@@ -7,28 +8,64 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Fetch all subjects from the subjects table
-    const { data, error } = await supabase
-      .from('subjects')
-      .select('id, code, name')
-      .order('name');
+    const {userId} = await auth();
+    const user = await currentUser();
 
-    if (error) {
-      console.error("Database error:", error);
+    if (!userId) {
+      Sentry.captureMessage("Unauthorized access attempt — no Clerk userId", "warning");
+      return NextResponse.json({error: "Unauthorized"}, {status: 401});
+    }
+
+    Sentry.setUser({
+      id: userId,
+      username: `${user?.firstName} ${user?.lastName}`,
+      email: user?.emailAddresses[0]?.emailAddress || "No email",
+    });
+
+    // 🔍 lookup user in supabase using Clerk user_id (text)
+    const {data: userData, error: userError} = await supabase
+      .from("users")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (userError) {
+      Sentry.captureException(userError);
+      return NextResponse.json({error: "User lookup failed"}, {status: 500});
+    }
+
+    if (!userData) {
+      Sentry.captureMessage(`User not found in Supabase for Clerk ID: ${userId}`, "warning");
+      return NextResponse.json({error: "User not found"}, {status: 404});
+    }
+
+    const teacherUUID = userData.id;
+    Sentry.setContext("booking_subjects", {teacherUUID});
+
+    const {data: subjects, error: subjectError} = await supabase
+      .from("subject_teachers")
+      .select("subject_id, subjects(id, code, name)")
+      // i hate this, use Clerk user_id directly
+      .eq("teacher_id", userId);
+
+    if (subjectError) {
+      Sentry.captureException(subjectError);
       return NextResponse.json(
-        { error: "Failed to fetch subjects" },
-        { status: 500 }
+        {error: "Failed to fetch subjects"},
+        {status: 500}
       );
     }
 
-    return NextResponse.json(data);
+    const simplifiedSubjects = subjects.map((s) => s.subjects);
+
+    return NextResponse.json(simplifiedSubjects);
   } catch (error) {
-    console.error("Error in subjects API:", error);
+    Sentry.captureException(error);
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      {error: "Internal server error"},
+      {status: 500}
     );
   }
 }
