@@ -1,7 +1,7 @@
 import {createClient} from "@supabase/supabase-js";
 import {type NextRequest, NextResponse} from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import {currentUser} from "@clerk/nextjs/server";
+import {auth, currentUser} from "@clerk/nextjs/server";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -17,7 +17,14 @@ export async function POST(request: NextRequest) {
   });
 
   try {
+    const {userId} = await auth();
     const user = await currentUser();
+
+    Sentry.setUser({
+      id: userId || undefined,
+      username: `${user?.firstName} ${user?.lastName}`,
+      email: user?.emailAddresses[0]?.emailAddress || "No email",
+    });
 
     if (!user) {
       Sentry.addBreadcrumb({

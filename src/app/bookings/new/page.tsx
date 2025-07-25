@@ -11,7 +11,6 @@ import {
   BookOpenIcon,
   Building,
   CalendarIcon,
-  CheckCircle2,
   ClockIcon,
   Loader2,
   MapPinIcon,
