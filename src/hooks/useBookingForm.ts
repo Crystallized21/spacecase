@@ -135,7 +135,6 @@ export function useBookingForm() {
             opts.onSuccess();
           }
 
-          await new Promise(resolve => setTimeout(resolve, 1500));
           router.push('/bookings/view');
           return result; // Return result for the success message
         } catch (error) {
