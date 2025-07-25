@@ -44,7 +44,7 @@ export default function BookingPage() {
   const handleSubmit = async () => {
     await baseHandleSubmit({
       onSuccess: () => setSuccess(true),
-    });
+    })
   };
 
   return (
@@ -192,26 +192,17 @@ export default function BookingPage() {
             </div>
 
             <div className="pt-4">
-              {success ? (
-                <Button
-                  className="w-full py-6 text-md font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white shadow-lg transition"
-                  disabled
-                >
-                  <CheckCircle2 className="h-5 w-5"/> Booking successful!
-                </Button>
-              ) : (
-                <Button
-                  className="w-full py-6 text-md font-medium transition"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !formData.subject || !formData.room || !formData.date || !formData.slot}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="animate-spin h-5 w-5"/> Submitting...
-                    </span>
-                  ) : "Submit Booking"}
-                </Button>
-              )}
+              <Button
+                className="w-full py-6 text-md font-medium transition"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !formData.subject || !formData.room || !formData.date || !formData.slot}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin h-5 w-5"/> Submitting...
+                  </span>
+                ) : "Submit Booking"}
+              </Button>
             </div>
           </CardContent>
         </Card>

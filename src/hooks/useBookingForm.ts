@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import * as Sentry from "@sentry/nextjs";
+import {toast} from "sonner";
 
 interface Subject {
   id: string;
@@ -98,46 +99,59 @@ export function useBookingForm() {
   };
 
   const handleSubmit = async (opts?: { onSuccess?: () => void }) => {
-    setIsSubmitting(true);
-    try {
-      // Split subject value to get UUID and line
-      let subjectId = formData.subject;
-      let line = "";
-      if (formData.subject.includes("-")) {
-        const parts = formData.subject.split("-");
-        subjectId = parts.slice(0, 5).join("-");
-        line = parts.slice(5).join("-");
+    // Create a toast promise that will show loading/success/error states
+    return toast.promise(
+      (async () => {
+        setIsSubmitting(true);
+        try {
+          // Split subject value to get UUID and line
+          let subjectId = formData.subject;
+          let line = "";
+          if (formData.subject.includes("-")) {
+            const parts = formData.subject.split("-");
+            subjectId = parts.slice(0, 5).join("-");
+            line = parts.slice(5).join("-");
+          }
+
+          const payload = {
+            ...formData,
+            subject: subjectId,
+            line,
+          };
+
+          const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to create booking');
+          }
+
+          if (opts?.onSuccess) {
+            opts.onSuccess();
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          router.push('/bookings/view');
+          return result; // Return result for the success message
+        } catch (error) {
+          console.error('Error submitting booking:', error);
+          Sentry.captureException(error);
+          throw error; // Rethrow to trigger the error toast
+        } finally {
+          setIsSubmitting(false);
+        }
+      })(),
+      {
+        loading: 'Creating your booking...',
+        success: (data) => 'Booking created successfully!',
+        error: (error) => `Error: ${error.message || 'Failed to create booking'}`,
       }
-
-      const payload = {
-        ...formData,
-        subject: subjectId,
-        line,
-      };
-
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create booking');
-      }
-
-      if (opts?.onSuccess)
-          opts.onSuccess();
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.push('/bookings/view');
-    } catch (error) {
-      console.error('Error submitting booking:', error);
-      alert('Failed to create booking. Please try again.');
-      Sentry.captureException(error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   };
 
   return {
