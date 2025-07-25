@@ -94,10 +94,25 @@ export function useBookingForm() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Split subject value to get UUID and line
+      let subjectId = formData.subject;
+      let line = "";
+      if (formData.subject.includes("-")) {
+        const parts = formData.subject.split("-");
+        subjectId = parts.slice(0, 5).join("-"); // UUID is 5 parts
+        line = parts.slice(5).join("-"); // Line number
+      }
+
+      const payload = {
+        ...formData,
+        subject: subjectId,
+        line,
+      };
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -115,7 +130,6 @@ export function useBookingForm() {
       setIsSubmitting(false);
     }
   };
-
   return {
     loading,
     isSubmitting,

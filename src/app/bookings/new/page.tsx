@@ -48,7 +48,7 @@ export default function BookingPage() {
                   {subjects.map((subject) => (
                     <SelectItem
                       key={`${subject.id}-${subject.line}`}
-                      value={subject.id}
+                      value={`${subject.id}-${subject.line}`}
                     >
                       {subject.code ? `${subject.code} - ${subject.name}` : subject.name}
                     </SelectItem>
