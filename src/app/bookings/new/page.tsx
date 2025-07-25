@@ -46,7 +46,10 @@ export default function BookingPage() {
                 <SelectTrigger className="bg-white"><SelectValue placeholder="Select subject"/></SelectTrigger>
                 <SelectContent>
                   {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
+                    <SelectItem
+                      key={`${subject.id}-${subject.line}`}
+                      value={subject.id}
+                    >
                       {subject.code ? `${subject.code} - ${subject.name}` : subject.name}
                     </SelectItem>
                   ))}

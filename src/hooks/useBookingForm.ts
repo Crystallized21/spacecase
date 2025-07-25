@@ -6,6 +6,7 @@ interface Subject {
   id: string;
   name: string;
   code?: string;
+  line: string
 }
 
 interface Slot {

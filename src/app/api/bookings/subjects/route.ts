@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     const {data: subjects, error: subjectError} = await supabase
       .from("subject_teachers")
-      .select("subject_id, subjects(id, code, name)")
+      .select("subject_id, line_number, subjects(id, code, name)")
       // i hate this, use Clerk user_id directly
       .eq("teacher_id", userId);
 
@@ -58,7 +58,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const simplifiedSubjects = subjects.map((s) => s.subjects);
+    // biome-ignore lint/suspicious/noExplicitAny: supabase dynamic type is hard to type correctly
+    const simplifiedSubjects = (subjects ?? []).map((s: any) => ({
+      id: s.subject_id,
+      name: `${s.subjects?.name ?? ""} (Line ${s.line_number})`,
+      code: s.subjects?.code ?? "",
+      line: s.line_number,
+    }));
 
     return NextResponse.json(simplifiedSubjects);
   } catch (error) {
