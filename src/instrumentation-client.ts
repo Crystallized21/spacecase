@@ -3,6 +3,8 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import {supabaseIntegration} from "@supabase/sentry-js-integration";
+import {SupabaseClient} from "@supabase/supabase-js";
 
 Sentry.init({
   dsn: "https://da8364e692f41f4a4a9aa84a3ad09596@o4507484286418944.ingest.us.sentry.io/4509332596195328",
@@ -10,6 +12,16 @@ Sentry.init({
   // Add optional integrations for additional features
   integrations: [
     Sentry.replayIntegration(),
+    supabaseIntegration(SupabaseClient, Sentry, {
+      tracing: true,
+      breadcrumbs: true,
+      errors: true,
+    }),
+    Sentry.browserTracingIntegration({
+      shouldCreateSpanForRequest: (url) => {
+        return !url.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest`)
+      },
+    }),
   ],
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
