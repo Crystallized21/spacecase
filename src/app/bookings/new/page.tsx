@@ -7,15 +7,7 @@ import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Header} from "@/components/dashboard/Header";
 import {Textarea} from "@/components/ui/textarea";
-import {
-  BookOpenIcon,
-  Building,
-  CalendarIcon,
-  ClockIcon,
-  Loader2,
-  MapPinIcon,
-  ScrollTextIcon
-} from "lucide-react";
+import {BookOpenIcon, Building, CalendarIcon, ClockIcon, Loader2, MapPinIcon, ScrollTextIcon} from "lucide-react";
 import {Calendar} from "@/components/ui/calendar";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {format} from "date-fns";
@@ -61,15 +53,17 @@ export default function BookingPage() {
             <CardDescription>All fields are required unless noted otherwise</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
-            {/* ...dropdowns and fields unchanged... */}
             {/* Subject Dropdown */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <BookOpenIcon className="h-4 w-4 text-primary"/>Subject
               </Label>
               <div className="relative">
-                <Select onValueChange={(val) => handleChange("subject", val)} value={formData.subject}
-                        disabled={loadingSubjects}>
+                <Select
+                  onValueChange={(val) => handleChange("subject", val)}
+                  value={formData.subject}
+                  disabled={loadingSubjects}
+                >
                   <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Select subject"/>
                   </SelectTrigger>
@@ -102,7 +96,11 @@ export default function BookingPage() {
                     <SelectValue placeholder="Select Common"/>
                   </SelectTrigger>
                   <SelectContent>
-                    {commons.map((common) => <SelectItem key={common} value={common}>{common}</SelectItem>)}
+                    {commons.map((common) =>
+                      <SelectItem key={common} value={common}>
+                        {common}
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {loadingCommons && (
