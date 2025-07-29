@@ -31,7 +31,6 @@ export function useBookingsView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [slotsMap, setSlotsMap] = useState<Record<string, Slot[]>>({});
 
   // fetch all bookings on initial load
@@ -96,8 +95,6 @@ export function useBookingsView() {
     paginatedData,
     search,
     setSearch,
-    statusFilter,
-    setStatusFilter,
     totalPages,
     currentPage,
     goToPreviousPage,

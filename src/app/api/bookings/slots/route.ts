@@ -1,5 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
-import {NextResponse} from "next/server";
+import {type NextRequest, NextResponse} from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
 const supabase = createClient(
@@ -15,7 +15,7 @@ type Slot = {
   end_time: string;
 };
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const {searchParams} = new URL(request.url);
     const day = searchParams.get("day");

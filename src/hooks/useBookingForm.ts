@@ -43,17 +43,7 @@ export function useBookingForm() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
 
-  // Fetch commons
-  useEffect(() => {
-    setLoadingCommons(true);
-    fetch("/api/bookings/commons")
-      .then(res => res.json())
-      .then(data => setCommons(data))
-      .catch(() => setCommons([]))
-      .finally(() => setLoadingCommons(false));
-  }, []);
-
-  // Fetch subjects
+  // fetch subjects
   useEffect(() => {
     setLoadingSubjects(true);
     fetch("/api/bookings/subjects")
@@ -63,7 +53,18 @@ export function useBookingForm() {
       .finally(() => setLoadingSubjects(false));
   }, []);
 
+  // Fetch commons
+  useEffect(() => {
+    setLoadingCommons(true);
+    fetch("/api/bookings/commons")
+      .then(res => res.json())
+      .then(data => setCommons(data))
+      .catch(() => setCommons([]))
+      .finally(() => setLoadingCommons(false));
+  }, []);
+  
   // Fetch rooms when a common is selected
+  // fetch rooms when a common is selected
   useEffect(() => {
     if (!formData.common) {
       setRooms([]);
@@ -78,7 +79,7 @@ export function useBookingForm() {
       .finally(() => setLoadingRooms(false));
   }, [formData.common]);
 
-  // Fetch slots when a date is selected
+  // fetch slots when a date is selected
   useEffect(() => {
     if (!formData.date) {
       setSlots([]);
@@ -99,12 +100,12 @@ export function useBookingForm() {
   };
 
   const handleSubmit = async (opts?: { onSuccess?: () => void }) => {
-    // Create a toast promise that will show loading/success/error states
+    // create a toast promise that will show loading/success/error states
     return toast.promise(
       (async () => {
         setIsSubmitting(true);
         try {
-          // Split subject value to get UUID and line
+          // split subject value to get UUID and line
           let subjectId = formData.subject;
           let line = "";
           if (formData.subject.includes("-")) {
@@ -140,7 +141,9 @@ export function useBookingForm() {
         } catch (error) {
           console.error('Error submitting booking:', error);
           Sentry.captureException(error);
-          throw error; // Rethrow to trigger the error toast
+
+          // rethrow to trigger the error toast
+          throw error;
         } finally {
           setIsSubmitting(false);
         }

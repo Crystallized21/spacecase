@@ -17,8 +17,6 @@ export default function ViewBookingPage() {
     paginatedData,
     search,
     setSearch,
-    statusFilter,
-    setStatusFilter,
     totalPages,
     currentPage,
     goToPreviousPage,
