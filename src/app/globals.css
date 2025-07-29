@@ -109,6 +109,8 @@
 }
 
 :root {
+  --background: white;
+
   /* Accent colors */
   --brand: oklch(66.5% 0.1804 47.04);
   --brand-foreground: oklch(75.77% 0.159 55.91);
@@ -211,4 +213,16 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+[data-slot="dialog-overlay"] {
+  z-index: 50 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-slot="dialog-content"] {
+  z-index: 51 !important;
+  background-color: white !important; /* Explicit background */
+  box-shadow: 0 20px 25px -5px var(--shadow, rgba(0, 0, 0, 0.1)),
+  0 8px 10px -6px var(--shadow, rgba(0, 0, 0, 0.1)) !important;
 }
