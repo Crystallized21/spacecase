@@ -33,7 +33,7 @@ export function Header() {
 
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-gray-700 hover:text-gray-900">Bookings</NavigationMenuTrigger>
-                <NavigationMenuContent>
+                <NavigationMenuContent className="z-50">
                   <div className="grid gap-4 py-2 px-2 w-[200px]">
                     <NavigationMenuLink
                       href="/bookings/new"
