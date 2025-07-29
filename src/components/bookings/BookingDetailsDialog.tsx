@@ -194,7 +194,7 @@ export function BookingDetailsDialog({
                       {format(new Date(booking.createdAt), "dd MMM, yyyy h:mm a")}
                     </p>
                     <p className="text-sm text-gray-500">
-                      by {currentUser?.fullName || "Unknown user"}
+                      by {booking?.teacherName || "Unknown user"}
                     </p>
                   </div>
                 ) : (
