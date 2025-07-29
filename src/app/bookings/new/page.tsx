@@ -95,7 +95,7 @@ export default function BookingPage() {
                   value={formData.common}
                   disabled={!formData.subject || loadingCommons}>
                   <SelectTrigger className="bg-white">
-                    <SelectValue placeholder={!formData.subject ? "Select subject first" : "Select Common"}/>
+                    <SelectValue placeholder={"Select Common"}/>
                   </SelectTrigger>
                   <SelectContent>
                     {commons.map((common) =>
@@ -108,6 +108,7 @@ export default function BookingPage() {
                 {loadingCommons && (
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary"/>
                 )}
+                {!formData.date && <p className="text-sm text-gray-500 mt-1">Please select a subject.</p>}
               </div>
             </div>
 
@@ -178,7 +179,7 @@ export default function BookingPage() {
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary"/>
                 )}
               </div>
-              {!formData.date && <p className="text-sm text-gray-500 mt-1">Please select a date first</p>}
+              {!formData.date && <p className="text-sm text-gray-500 mt-1">Please select a date.</p>}
             </div>
 
             <div className="space-y-2">
