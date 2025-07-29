@@ -65,6 +65,7 @@ export default function ViewBookingPage() {
                   <TableHead>Subject</TableHead>
                   <TableHead>Room & Kainga</TableHead>
                   <TableHead>Date & Time</TableHead>
+                  <TableHead>Created At</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -103,6 +104,20 @@ export default function ViewBookingPage() {
                                 : `Slot ${booking.time}`}
                             </div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {booking.createdAt ? (
+                            <div>
+                              <div className="font-medium">
+                                {format(new Date(booking.createdAt), "EEEE")}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {format(new Date(booking.createdAt), "dd MMM, yyyy h:mm a")}
+                              </div>
+                            </div>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">

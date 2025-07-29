@@ -13,6 +13,7 @@ interface Booking {
   commons?: string;
   subject?: string;
   subjectCode?: string;
+  createdAt?: string;
 }
 
 interface Slot {
@@ -23,7 +24,7 @@ interface Slot {
   endTime: string;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 export function useBookingsView() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -39,10 +40,22 @@ export function useBookingsView() {
       setLoading(true);
       try {
         const res = await fetch("/api/bookings");
-        if (!res.ok) throw new Error("Failed to fetch bookings");
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch bookings");
+        }
+
         const data = await res.json();
-        setBookings(data);
-        setFilteredBookings(data);
+
+        // sort bookings by createdAt in descending order (newest first)
+        const sortedData = [...data].sort((a, b) => {
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
+        setBookings(sortedData);
+        setFilteredBookings(sortedData);
       } catch (err) {
         Sentry.captureException(err);
         console.error("Failed to fetch bookings:", err);
@@ -50,7 +63,16 @@ export function useBookingsView() {
         setLoading(false);
       }
     };
-    fetchBookings();
+    fetchBookings().catch(err => {
+      Sentry.captureException(err, {
+        extra: {
+          endpoint: "/api/bookings",
+          method: "GET",
+          timestamp: new Date().toISOString()
+        }
+      });
+      console.error("Error fetching bookings:", err);
+    });
   }, []);
 
   // apply filters when search term or source data changes

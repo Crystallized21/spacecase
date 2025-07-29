@@ -212,6 +212,7 @@ export async function GET() {
         user_id,
         room_id,
         subject_id,
+        created_at,
         users (
           name,
           email
@@ -298,6 +299,7 @@ export async function GET() {
         commons: b.rooms?.commons?.name || "",
         subject: b.subjects?.name || "",
         subjectCode: b.subjects?.code || "",
+        createdAt: b.created_at,
       };
     });
 
