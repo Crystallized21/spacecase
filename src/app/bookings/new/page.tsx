@@ -90,10 +90,12 @@ export default function BookingPage() {
                 <Building className="h-4 w-4 text-primary"/>Common
               </Label>
               <div className="relative">
-                <Select onValueChange={(val) => handleChange("common", val)} value={formData.common}
-                        disabled={loadingCommons}>
+                <Select
+                  onValueChange={(val) => handleChange("common", val)}
+                  value={formData.common}
+                  disabled={!formData.subject || loadingCommons}>
                   <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select Common"/>
+                    <SelectValue placeholder={!formData.subject ? "Select subject first" : "Select Common"}/>
                   </SelectTrigger>
                   <SelectContent>
                     {commons.map((common) =>

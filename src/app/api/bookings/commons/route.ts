@@ -1,5 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
-import {NextResponse} from "next/server";
+import {type NextRequest, NextResponse} from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
 const supabase = createClient(
@@ -7,19 +7,42 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const {data, error} = await supabase.from("commons").select("name");
+    const url = new URL(request.url);
+    const subjectId = url.searchParams.get('subject');
+
+    // If no subject ID provided, return empty array
+    if (!subjectId) {
+      return NextResponse.json([]);
+    }
+
+    // Query commons linked to the selected subject through join table
+    const {data, error} = await supabase
+      .from("subject_common_access")
+      .select(`
+        commons:common_id (
+          name
+        )
+      `)
+      .eq("subject_id", subjectId);
+
     if (error) {
       Sentry.captureException(error, {
         extra: {
           context: "Database fetch operation",
-          operation: "commons.select"
+          operation: "subject_common_access.select",
+          subjectId
         }
       });
       return NextResponse.json({error: "Internal Server Error"}, {status: 500});
     }
-    return NextResponse.json(data.map((c: { name: string }) => c.name));
+
+    // Extract commons names
+    // biome-ignore lint/suspicious/noExplicitAny: supabase returns really weird types
+    const commons = data.map((item: any) => item.commons.name);
+
+    return NextResponse.json(commons);
   } catch (err) {
     Sentry.captureException(err, {
       extra: {

@@ -8,6 +8,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
+// TODO: reduce complexity of this function, mainly because of sentry logging maybe?
 export async function POST(request: NextRequest) {
   Sentry.addBreadcrumb({
     category: "api",

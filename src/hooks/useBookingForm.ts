@@ -53,17 +53,34 @@ export function useBookingForm() {
       .finally(() => setLoadingSubjects(false));
   }, []);
 
-  // Fetch commons
+  // fetch commons
   useEffect(() => {
+    // reset commons when subject changes
+    setCommons([]);
+    setFormData(prev => ({...prev, common: "", room: ""}));
+
+    // don't fetch if no subject is selected
+    if (!formData.subject) {
+      setLoadingCommons(false);
+      return;
+    }
+
+    // extract the subject ID from the formData.subject string
+    let subjectId = formData.subject;
+    if (formData.subject.includes("-")) {
+      const parts = formData.subject.split("-");
+      subjectId = parts.slice(0, 5).join("-");
+    }
+
     setLoadingCommons(true);
-    fetch("/api/bookings/commons")
+
+    fetch(`/api/bookings/commons?subject=${encodeURIComponent(subjectId)}`)
       .then(res => res.json())
-      .then(data => setCommons(data))
+      .then(data => setCommons(Array.isArray(data) ? data : []))
       .catch(() => setCommons([]))
       .finally(() => setLoadingCommons(false));
-  }, []);
-  
-  // Fetch rooms when a common is selected
+  }, [formData.subject]);
+
   // fetch rooms when a common is selected
   useEffect(() => {
     if (!formData.common) {
