@@ -44,12 +44,12 @@ export function BookingDetailsDialog({
   isOpen,
   onClose
 }: BookingDetailsDialogProps) {
-  const {user: currentUser} = useUser();
   const [teacherDetails, setTeacherDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (booking?.user_id && isOpen) {
+      setTeacherDetails(null); // Reset details
       setLoading(true);
       fetch(`/api/users/${booking.user_id}`)
         .then(res => res.json())
@@ -60,9 +60,11 @@ export function BookingDetailsDialog({
         .catch(() => {
           setLoading(false);
         });
+    } else {
+      setTeacherDetails(null); // Reset when closed or no booking
+      setLoading(false);
     }
   }, [booking, isOpen]);
-
   if (!booking) return null;
 
   const bookingDate = new Date(booking.date);
@@ -106,9 +108,19 @@ export function BookingDetailsDialog({
             </div>
 
             <div className="flex-1">
-              <h3
-                className="text-xl font-bold">{teacherDetails ? `${teacherDetails.firstName} ${teacherDetails.lastName}` : booking.teacherName}</h3>
-              <p className="text-muted-foreground">{booking.teacherEmail}</p>
+              {loading ? (
+                <>
+                  <Skeleton className="h-6 w-40 mb-2" />
+                  <Skeleton className="h-4 w-32" />
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-bold">
+                    {teacherDetails ? `${teacherDetails.firstName} ${teacherDetails.lastName}` : booking.teacherName}
+                  </h3>
+                  <p className="text-muted-foreground">{booking.teacherEmail}</p>
+                </>
+              )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 px-3 py-1">
                   {booking.subject}
