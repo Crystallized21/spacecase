@@ -3,13 +3,13 @@
 import {Header} from "@/components/dashboard/Header"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {formatTime} from "@/lib/utils"
 import {format} from "date-fns"
 import {ChevronLeft, ChevronRight, Eye, Loader2, Pencil, Plus, Search,} from "lucide-react"
 import Link from "next/link"
 import {useBookingsView} from "@/hooks/useBookingsView"
+import { calculateTermAndWeek } from "@/lib/dateUtils"
 
 export default function ViewBookingPage() {
   const {
@@ -110,6 +110,11 @@ export default function ViewBookingPage() {
                             <div>
                               <div className="font-medium">
                                 {format(new Date(booking.createdAt), "EEEE")}
+                                {(() => {
+                                  const date = new Date(booking.createdAt);
+                                  const {term, weekInTerm} = calculateTermAndWeek(date);
+                                  return ` (Week ${weekInTerm}, Term ${term})`;
+                                })()}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {format(new Date(booking.createdAt), "dd MMM, yyyy h:mm a")}
