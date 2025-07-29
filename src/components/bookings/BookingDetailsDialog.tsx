@@ -97,7 +97,9 @@ export function BookingDetailsDialog({
                 <Skeleton className="h-24 w-24 rounded-full"/>
               ) : (
                 <Avatar className="h-24 w-24 border-primary shadow-lg">
-                  <AvatarImage src={teacherDetails?.imageUrl || undefined} alt={booking.teacherName}/>
+                  {!loading && teacherDetails?.imageUrl ? (
+                    <AvatarImage src={teacherDetails.imageUrl} alt={booking.teacherName} />
+                  ) : null}
                   <AvatarFallback className="text-xl bg-primary/10">{teacherInitials}</AvatarFallback>
                 </Avatar>
               )}
