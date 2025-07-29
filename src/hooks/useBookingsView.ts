@@ -1,7 +1,6 @@
 import {useEffect, useState} from "react";
 import * as Sentry from "@sentry/nextjs";
 
-// Define types for our data
 interface Booking {
   id: string;
   teacherName: string;
@@ -78,12 +77,25 @@ export function useBookingsView() {
   // apply filters when search term or source data changes
   useEffect(() => {
     let result = bookings;
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(b =>
-        [b.teacherName, b.teacherEmail, b.room, b.commons, b.subject, b.subjectCode]
-          .some(field => field?.toLowerCase().includes(q))
-      );
+    const trimmedSearch = search.trim().toLowerCase();
+    if (trimmedSearch) {
+      result = result.filter(b => {
+        const weekday = new Date(b.date).toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+        return [
+          b.teacherName,
+          b.teacherEmail,
+          b.room,
+          b.commons,
+          b.subject,
+          b.subjectCode,
+          b.notes,
+          b.date,
+          b.time,
+          weekday // add weekday here
+        ]
+          .filter(Boolean)
+          .some(field => field?.toLowerCase().includes(trimmedSearch));
+      });
     }
     setFilteredBookings(result);
     setCurrentPage(1);
