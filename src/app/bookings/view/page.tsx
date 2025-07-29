@@ -1,15 +1,17 @@
 "use client"
 
+import {useState} from "react";
 import {Header} from "@/components/dashboard/Header"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {formatTime} from "@/lib/utils"
 import {format} from "date-fns"
-import {ChevronLeft, ChevronRight, Eye, Loader2, Pencil, Plus, Search,} from "lucide-react"
+import {ChevronLeft, ChevronRight, Eye, Loader2, Plus, Search} from "lucide-react"
 import Link from "next/link"
 import {useBookingsView} from "@/hooks/useBookingsView"
-import { calculateTermAndWeek } from "@/lib/dateUtils"
+import {calculateTermAndWeek} from "@/lib/dateUtils"
+import {BookingDetailsDialog} from "@/components/bookings/BookingDetailsDialog"
 
 export default function ViewBookingPage() {
   const {
@@ -25,8 +27,22 @@ export default function ViewBookingPage() {
     totalBookings,
   } = useBookingsView();
 
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  const handleViewBooking = (booking) => {
+    const weekday = new Date(booking.date).toLocaleDateString("en-US", {weekday: "long"});
+    const slotsForDay = slotsMap[weekday] || [];
+    const slotDef = slotsForDay.find(s => s.number === Number.parseInt(booking.time, 10));
+
+    setSelectedBooking(booking);
+    setSelectedSlot(slotDef);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 z-0">
       <Header/>
       <div className="p-6 flex-1">
         <div className="mb-6">
@@ -126,11 +142,12 @@ export default function ViewBookingPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewBooking(booking)}
+                            >
                               <Eye className="h-3.5 w-3.5 mr-1.5"/>View
-                            </Button>
-                            <Button size="sm" variant="default">
-                              <Pencil className="h-3.5 w-3.5 mr-1.5"/>Edit
                             </Button>
                           </div>
                         </TableCell>
@@ -139,7 +156,7 @@ export default function ViewBookingPage() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       No bookings found
                     </TableCell>
                   </TableRow>
@@ -163,6 +180,13 @@ export default function ViewBookingPage() {
           </div>
         )}
       </div>
+
+      <BookingDetailsDialog
+        booking={selectedBooking}
+        slot={selectedSlot}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+      />
     </div>
   );
 }
