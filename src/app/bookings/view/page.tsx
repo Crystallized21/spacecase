@@ -1,17 +1,33 @@
 "use client"
 
-import {useState} from "react";
+import {BookingDetailsDialog} from "@/components/bookings/BookingDetailsDialog"
 import {Header} from "@/components/dashboard/Header"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
+import {useBookingsView} from "@/hooks/useBookingsView"
+import {calculateTermAndWeek} from "@/lib/dateUtils"
 import {formatTime} from "@/lib/utils"
 import {format} from "date-fns"
 import {ChevronLeft, ChevronRight, Eye, Loader2, Plus, Search} from "lucide-react"
 import Link from "next/link"
-import {useBookingsView} from "@/hooks/useBookingsView"
-import {calculateTermAndWeek} from "@/lib/dateUtils"
-import {BookingDetailsDialog} from "@/components/bookings/BookingDetailsDialog"
+import {useState} from "react";
+
+type Slot = { number: number; startTime: string; endTime: string };
+type Booking = {
+  id: string;
+  teacherName: string;
+  teacherEmail: string;
+  date: string;
+  time: string;
+  notes?: string;
+  room?: string;
+  commons?: string;
+  subject?: string;
+  subjectCode?: string;
+  createdAt?: string;
+  user_id?: string;
+};
 
 export default function ViewBookingPage() {
   const {
@@ -27,14 +43,14 @@ export default function ViewBookingPage() {
     totalBookings,
   } = useBookingsView();
 
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
 
-  const handleViewBooking = (booking) => {
+  const handleViewBooking = (booking: Booking) => {
     const weekday = new Date(booking.date).toLocaleDateString("en-US", {weekday: "long"});
     const slotsForDay = slotsMap[weekday] || [];
-    const slotDef = slotsForDay.find(s => s.number === Number.parseInt(booking.time, 10));
+    const slotDef = slotsForDay.find((s: Slot) => s.number === Number.parseInt(booking.time, 10)) || undefined;
 
     setSelectedBooking(booking);
     setSelectedSlot(slotDef);
@@ -87,10 +103,10 @@ export default function ViewBookingPage() {
               </TableHeader>
               <TableBody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map(booking => {
+                  paginatedData.map((booking: Booking) => {
                     const weekday = new Date(booking.date).toLocaleDateString("en-US", {weekday: "long"});
                     const slotsForDay = slotsMap[weekday] || [];
-                    const slotDef = slotsForDay.find(s => s.number === Number.parseInt(booking.time, 10));
+                    const slotDef = slotsForDay.find((s: Slot) => s.number === Number.parseInt(booking.time, 10)) || null;
                     return (
                       <TableRow key={booking.id}>
                         <TableCell>

@@ -290,6 +290,7 @@ export async function GET() {
     const bookings = (data || []).map((b: any) => {
       return {
         id: b.id,
+        user_id: b.user_id,
         teacherName: b.users?.name || "",
         teacherEmail: b.users?.email || "",
         date: b.date,
