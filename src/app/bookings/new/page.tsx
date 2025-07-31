@@ -38,6 +38,8 @@ export default function BookingPage() {
     })
   };
 
+  console.log("Current slots with booking status:", slots);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header/>
@@ -169,8 +171,27 @@ export default function BookingPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {slots.map((slot) => (
-                      <SelectItem key={slot.id} value={slot.number.toString()}>
-                        Period {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})
+                      <SelectItem
+                        key={slot.id}
+                        value={slot.number.toString()}
+                        disabled={slot.isBooked}
+                        className={cn(
+                          "relative",
+                          slot.isBooked && "text-muted-foreground bg-gray-100 cursor-not-allowed"
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>Period {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})</span>
+                          {slot.isBooked && (
+                            <span
+                              className="text-red-500 text-xs font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                              Already Booked
+                            </span>
+                          )}
+                        </div>
+                        {slot.isBooked &&
+                            <div className="absolute inset-0 bg-gray-100 opacity-40 pointer-events-none"/>
+                        }
                       </SelectItem>
                     ))}
                   </SelectContent>

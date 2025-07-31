@@ -119,6 +119,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // After retrieving roomData and before the insert operation
+    Sentry.addBreadcrumb({
+      category: "validation",
+      message: "Checking for booking conflicts",
+      level: "info",
+      data: {room_id: roomData.id, date, slot}
+    });
+
+    const {data: conflictData, error: conflictError} = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("room_id", roomData.id)
+      .eq("date", new Date(date).toISOString().split('T')[0])
+      .eq("period", Number(slot))
+      .single();
+
+    if (conflictError && conflictError.code !== 'PGRST116') {
+      Sentry.captureException(conflictError, {
+        extra: {
+          context: "Checking booking conflicts",
+          room_id: roomData.id,
+          date,
+          slot
+        }
+      });
+      return NextResponse.json(
+        {error: "Failed to check booking availability", details: conflictError.message},
+        {status: 500}
+      );
+    }
+
+    if (conflictData) {
+      Sentry.addBreadcrumb({
+        category: "validation",
+        message: "Booking conflict detected",
+        level: "warning",
+        data: {room_id: roomData.id, date, slot, conflictId: conflictData.id}
+      });
+
+      return NextResponse.json(
+        {error: "Room is already booked for this time slot", conflict: true},
+        {status: 409}
+      );
+    }
+
     Sentry.addBreadcrumb({
       category: "db",
       message: "Inserting booking",
