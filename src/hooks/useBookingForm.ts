@@ -16,6 +16,7 @@ interface Slot {
   day: string;
   startTime: string;
   endTime: string;
+  isBooked?: boolean;
 }
 
 export function useBookingForm() {
@@ -42,6 +43,8 @@ export function useBookingForm() {
   const [rooms, setRooms] = useState<string[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
+
+  const [slotRefreshTrigger, setSlotRefreshTrigger] = useState(0);
 
   // fetch subjects
   useEffect(() => {
@@ -98,19 +101,78 @@ export function useBookingForm() {
 
   // fetch slots when a date is selected
   useEffect(() => {
+    // Reset slots when date or room changes
+    setSlots([]);
+    setFormData(prev => ({...prev, slot: ""}));
+
     if (!formData.date) {
-      setSlots([]);
-      setFormData(prev => ({...prev, slot: ""}));
+      setLoadingSlots(false);
       return;
     }
+
     const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
+    const dateStr = formData.date.toISOString().split('T')[0];
     setLoadingSlots(true);
-    fetch(`/api/bookings/slots?day=${encodeURIComponent(dayName)}`)
+
+    // Always include room and date parameters if available
+    let url = `/api/bookings/slots?day=${encodeURIComponent(dayName)}`;
+
+    if (formData.room) {
+      url += `&room=${encodeURIComponent(formData.room)}&date=${encodeURIComponent(dateStr)}`;
+    }
+
+    fetch(url)
       .then(res => res.json())
-      .then(data => Array.isArray(data) ? setSlots(data) : setSlots([]))
-      .catch(() => setSlots([]))
+      .then(data => {
+        if (Array.isArray(data)) {
+          console.log("Loaded slots with availability:", data); // Debug log
+          setSlots(data);
+        } else {
+          setSlots([]);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching slots:", error);
+        setSlots([]);
+      })
       .finally(() => setLoadingSlots(false));
-  }, [formData.date]);
+  }, [formData.date, formData.room]);
+
+  // In src/hooks/useBookingForm.ts
+  // Update the slots API response processing to ensure proper type handling
+
+  useEffect(() => {
+    if (formData.room && formData.date) {
+      const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
+      const dateStr = formData.date.toISOString().split('T')[0];
+
+      fetch(`/api/bookings/slots?day=${encodeURIComponent(dayName)}&room=${encodeURIComponent(formData.room)}&date=${encodeURIComponent(dateStr)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Ensure slot numbers are treated as strings when checking booked status
+            const formattedData = data.map(slot => ({
+              ...slot,
+              number: slot.number,
+              isBooked: !!slot.isBooked // Ensure this is a boolean
+            }));
+            console.log("Processed slot data:", formattedData);
+            setSlots(formattedData);
+          }
+        })
+        .catch(error => console.error("Failed to refresh slot availability:", error));
+    }
+  }, [formData.room, formData.date]);
+
+  // Add effect to clear slot selection if the selected slot becomes unavailable
+  useEffect(() => {
+    // If a slot is selected and it's now marked as booked, clear the selection
+    if (formData.slot && slots.some(s =>
+      s.number.toString() === formData.slot && s.isBooked
+    )) {
+      setFormData(prev => ({...prev, slot: ""}));
+    }
+  }, [slots, formData.slot]);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData(prev => ({...prev, [key]: value}));
@@ -146,8 +208,13 @@ export function useBookingForm() {
           const result = await response.json();
 
           if (!response.ok) {
+            if (response.status === 409) { // Conflict status
+              throw new Error('This room is already booked for the selected time slot');
+            }
             throw new Error(result.error || 'Failed to create booking');
           }
+
+          setSlotRefreshTrigger(prev => prev + 1); // Trigger slot refresh
 
           if (opts?.onSuccess) {
             opts.onSuccess();
