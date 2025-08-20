@@ -101,7 +101,7 @@ export function useBookingForm() {
 
   // fetch slots when a date is selected
   useEffect(() => {
-    // Reset slots when date or room changes
+    // Reset slots when date, room or subject changes
     setSlots([]);
     setFormData(prev => ({...prev, slot: ""}));
 
@@ -114,9 +114,28 @@ export function useBookingForm() {
     const dateStr = formData.date.toISOString().split('T')[0];
     setLoadingSlots(true);
 
-    // Always include room and date parameters if available
+    // Build URL with all required parameters
     let url = `/api/bookings/slots?day=${encodeURIComponent(dayName)}`;
 
+    // Add subject ID and line number if available
+    if (formData.subject) {
+      // The subject format is "subject_id-line_number"
+      // Need to find the last hyphen to separate them correctly
+      const lastHyphenIndex = formData.subject.lastIndexOf('-');
+
+      if (lastHyphenIndex !== -1) {
+        const subjectId = formData.subject.substring(0, lastHyphenIndex);
+        const line = formData.subject.substring(lastHyphenIndex + 1);
+
+        url += `&subject=${encodeURIComponent(subjectId)}`;
+        url += `&line=${encodeURIComponent(line)}`;
+      } else {
+        // Fallback in case there's no hyphen
+        url += `&subject=${encodeURIComponent(formData.subject)}`;
+      }
+    }
+
+    // Add room and date if available
     if (formData.room) {
       url += `&room=${encodeURIComponent(formData.room)}&date=${encodeURIComponent(dateStr)}`;
     }
@@ -125,7 +144,7 @@ export function useBookingForm() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          console.log("Loaded slots with availability:", data); // Debug log
+          console.log("Loaded slots with availability:", data);
           setSlots(data);
         } else {
           setSlots([]);
@@ -136,10 +155,7 @@ export function useBookingForm() {
         setSlots([]);
       })
       .finally(() => setLoadingSlots(false));
-  }, [formData.date, formData.room]);
-
-  // In src/hooks/useBookingForm.ts
-  // Update the slots API response processing to ensure proper type handling
+  }, [formData.date, formData.room, formData.subject]);
 
   useEffect(() => {
     if (formData.room && formData.date) {
@@ -187,10 +203,11 @@ export function useBookingForm() {
           // split subject value to get UUID and line
           let subjectId = formData.subject;
           let line = "";
-          if (formData.subject.includes("-")) {
-            const parts = formData.subject.split("-");
-            subjectId = parts.slice(0, 5).join("-");
-            line = parts.slice(5).join("-");
+
+          const lastHyphenIndex = formData.subject.lastIndexOf('-');
+          if (lastHyphenIndex !== -1) {
+            subjectId = formData.subject.substring(0, lastHyphenIndex);
+            line = formData.subject.substring(lastHyphenIndex + 1);
           }
 
           const payload = {
@@ -234,7 +251,7 @@ export function useBookingForm() {
       })(),
       {
         loading: 'Creating your booking...',
-        success: (data) => 'Booking created successfully!',
+        success: () => 'Booking created successfully!',
         error: (error) => `Error: ${error.message || 'Failed to create booking'}`,
       }
     );
