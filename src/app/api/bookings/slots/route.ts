@@ -1,4 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
+import {auth} from "@clerk/nextjs/server";
 import {type NextRequest, NextResponse} from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
@@ -13,14 +14,83 @@ export async function GET(request: NextRequest) {
     const day = searchParams.get("day");
     const room = searchParams.get("room");
     const date = searchParams.get("date");
+    const subjectId = searchParams.get("subject"); // New parameter
+    const lineNumber = searchParams.get("line"); // New parameter for explicit line selection
 
-    // Get all slots for the given day
+    if (!day) {
+      return NextResponse.json(
+        {error: "Day parameter is required"},
+        {status: 400}
+      );
+    }
+
+    // Get teacher ID for filtering by subject line
+    const {userId} = await auth();
+
+    // Find available slot numbers for this teacher's line(s)
+    let slotNumbers: number[] = [];
+
+    if (subjectId && userId) {
+      // Find line numbers for this teacher and subject
+      let lineQuery = supabase
+        .from("subject_teachers")
+        .select("line_number")
+        .eq("teacher_id", userId)
+        .eq("subject_id", subjectId);
+
+      // If line number is explicitly provided, verify it belongs to this teacher
+      if (lineNumber) {
+        lineQuery = lineQuery.eq("line_number", lineNumber);
+      }
+
+      const {data: lines, error: lineError} = await lineQuery;
+
+      if (lineError) {
+        Sentry.captureException(lineError);
+        return NextResponse.json(
+          {error: "Failed to fetch teacher's lines"},
+          {status: 500}
+        );
+      }
+
+      if (!lines || lines.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      const teacherLines = lines.map(l => l.line_number);
+
+      // Get slot numbers for these lines on this day
+      const {data: lineSlots, error: lineSlotsError} = await supabase
+        .from("line_slots")
+        .select("slot_number")
+        .in("line_number", teacherLines)
+        .eq("weekday", day);
+
+      if (lineSlotsError) {
+        Sentry.captureException(lineSlotsError);
+        return NextResponse.json(
+          {error: "Failed to fetch line slots"},
+          {status: 500}
+        );
+      }
+
+      slotNumbers = lineSlots.map(ls => ls.slot_number);
+
+      // If no slots found for this line on this day
+      if (slotNumbers.length === 0) {
+        return NextResponse.json([]);
+      }
+    }
+
+    // Get slot times data
     let query = supabase
       .from("slot_times")
-      .select("id, slot_number, weekday, start_time, end_time");
+      .select("id, slot_number, weekday, start_time, end_time")
+      .eq("weekday", day);
 
-    if (day) {
-      query = query.eq("weekday", day);
+    // If filtering by subject/line, only include the slots for those lines
+    if (subjectId && slotNumbers.length > 0) {
+      query = query.in("slot_number", slotNumbers);
     }
 
     const {data, error} = await query.order("slot_number");
@@ -49,7 +119,6 @@ export async function GET(request: NextRequest) {
         .eq("name", room)
         .single();
 
-      // In src/app/api/bookings/slots/route.ts, update the booking detection code:
       if (roomData) {
         const formattedDate = new Date(date).toISOString().split('T')[0];
 
