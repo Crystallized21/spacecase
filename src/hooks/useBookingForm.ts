@@ -2,12 +2,13 @@ import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import * as Sentry from "@sentry/nextjs";
 import {toast} from "sonner";
+import {format} from "date-fns";
 
 interface Subject {
   id: string;
   name: string;
   code?: string;
-  line: string
+  line: string;
 }
 
 interface Slot {
@@ -17,6 +18,11 @@ interface Slot {
   startTime: string;
   endTime: string;
   isBooked?: boolean;
+}
+
+interface RoomWithBookingStatus {
+  name: string;
+  isBooked: boolean;
 }
 
 export function useBookingForm() {
@@ -40,13 +46,13 @@ export function useBookingForm() {
   });
 
   const [commons, setCommons] = useState<string[]>([]);
-  const [rooms, setRooms] = useState<string[]>([]);
+  const [rooms, setRooms] = useState<RoomWithBookingStatus[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
 
   const [slotRefreshTrigger, setSlotRefreshTrigger] = useState(0);
 
-  // fetch subjects
+  // subjects
   useEffect(() => {
     setLoadingSubjects(true);
     fetch("/api/bookings/subjects")
@@ -56,11 +62,11 @@ export function useBookingForm() {
       .finally(() => setLoadingSubjects(false));
   }, []);
 
-  // fetch commons
+  // commons
   useEffect(() => {
     // reset commons when subject changes
     setCommons([]);
-    setFormData(prev => ({...prev, common: "", room: ""}));
+    setFormData(prev => ({...prev, common: "", room: "", slot: ""}));
 
     // don't fetch if no subject is selected
     if (!formData.subject) {
@@ -84,45 +90,28 @@ export function useBookingForm() {
       .finally(() => setLoadingCommons(false));
   }, [formData.subject]);
 
-  // fetch rooms when a common is selected
+  // Initial slots loading for selected date and subject
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only refresh slots when date/subject change
   useEffect(() => {
-    if (!formData.common) {
-      setRooms([]);
-      setFormData(prev => ({...prev, room: ""}));
-      return;
-    }
-    setLoadingRooms(true);
-    fetch(`/api/bookings/rooms?common=${encodeURIComponent(formData.common)}`)
-      .then(res => res.json())
-      .then(data => setRooms(data))
-      .catch(() => setRooms([]))
-      .finally(() => setLoadingRooms(false));
-  }, [formData.common]);
-
-  // fetch slots when a date is selected
-  useEffect(() => {
-    // Reset slots when date, room or subject changes
+    // Reset slots when date or subject changes
     setSlots([]);
-    setFormData(prev => ({...prev, slot: ""}));
+    setFormData(prev => ({...prev, slot: "", room: ""}));
 
     if (!formData.date) {
       setLoadingSlots(false);
       return;
     }
 
-    const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
-    const dateStr = formData.date.toISOString().split('T')[0];
+    const dayName = formData.date.toLocaleDateString("en-US", {weekday: "long"});
+    const dateStr = format(formData.date, "yyyy-MM-dd");
     setLoadingSlots(true);
 
-    // Build URL with all required parameters
-    let url = `/api/bookings/slots?day=${encodeURIComponent(dayName)}`;
+    // Always include date so API can mark booked slots correctly
+    let url = `/api/bookings/slots?day=${encodeURIComponent(dayName)}&date=${encodeURIComponent(dateStr)}`;
 
     // Add subject ID and line number if available
     if (formData.subject) {
-      // The subject format is "subject_id-line_number"
-      // Need to find the last hyphen to separate them correctly
-      const lastHyphenIndex = formData.subject.lastIndexOf('-');
-
+      const lastHyphenIndex = formData.subject.lastIndexOf("-");
       if (lastHyphenIndex !== -1) {
         const subjectId = formData.subject.substring(0, lastHyphenIndex);
         const line = formData.subject.substring(lastHyphenIndex + 1);
@@ -130,65 +119,99 @@ export function useBookingForm() {
         url += `&subject=${encodeURIComponent(subjectId)}`;
         url += `&line=${encodeURIComponent(line)}`;
       } else {
-        // Fallback in case there's no hyphen
+        // fallback in case there's no hyphen
         url += `&subject=${encodeURIComponent(formData.subject)}`;
       }
-    }
-
-    // Add room and date if available
-    if (formData.room) {
-      url += `&room=${encodeURIComponent(formData.room)}&date=${encodeURIComponent(dateStr)}`;
     }
 
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          console.log("Loaded slots with availability:", data);
-          setSlots(data);
-        } else {
-          setSlots([]);
-        }
+        if (Array.isArray(data)) setSlots(data);
+        else setSlots([]);
       })
       .catch(error => {
         console.error("Error fetching slots:", error);
         setSlots([]);
       })
       .finally(() => setLoadingSlots(false));
-  }, [formData.date, formData.room, formData.subject]);
+  }, [formData.date, formData.subject, slotRefreshTrigger]);
 
+  // Separate effect to update slot booking status when room changes
   useEffect(() => {
-    if (formData.room && formData.date) {
-      const dayName = formData.date.toLocaleDateString('en-US', {weekday: 'long'});
-      const dateStr = formData.date.toISOString().split('T')[0];
+    if (formData.room && formData.date && slots.length > 0) {
+      const dayName = formData.date.toLocaleDateString("en-US", {weekday: "long"});
+      const dateStr = format(formData.date, "yyyy-MM-dd");
 
-      fetch(`/api/bookings/slots?day=${encodeURIComponent(dayName)}&room=${encodeURIComponent(formData.room)}&date=${encodeURIComponent(dateStr)}`)
+      // Only fetch booking status updates, don't reset selections
+      let url = `/api/bookings/slots?day=${encodeURIComponent(dayName)}&date=${encodeURIComponent(dateStr)}&room=${encodeURIComponent(formData.room)}`;
+
+      // Add subject info if available
+      if (formData.subject) {
+        const lastHyphenIndex = formData.subject.lastIndexOf("-");
+        if (lastHyphenIndex !== -1) {
+          const subjectId = formData.subject.substring(0, lastHyphenIndex);
+          const line = formData.subject.substring(lastHyphenIndex + 1);
+          url += `&subject=${encodeURIComponent(subjectId)}`;
+          url += `&line=${encodeURIComponent(line)}`;
+        } else {
+          url += `&subject=${encodeURIComponent(formData.subject)}`;
+        }
+      }
+
+      console.log("Fetching slot booking status with URL:", url);
+
+      fetch(url)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            // Ensure slot numbers are treated as strings when checking booked status
-            const formattedData = data.map(slot => ({
-              ...slot,
-              number: slot.number,
-              isBooked: !!slot.isBooked // Ensure this is a boolean
-            }));
-            console.log("Processed slot data:", formattedData);
-            setSlots(formattedData);
+            console.log("Received updated slot data:", data);
+
+            // Update slots with booking information
+            setSlots(prev => {
+              const updatedSlots = prev.map(slot => {
+                const updatedSlot = data.find(s => s.number === slot.number);
+                if (updatedSlot?.isBooked) {
+                  console.log(`Marking slot ${slot.number} as booked`);
+                  return {...slot, isBooked: true};
+                }
+                return slot;
+              });
+              console.log("Updated slots:", updatedSlots);
+              return updatedSlots;
+            });
           }
         })
-        .catch(error => console.error("Failed to refresh slot availability:", error));
+        .catch(error => {
+          console.error("Error updating slot booking status:", error);
+        });
     }
-  }, [formData.room, formData.date]);
+  }, [formData.room, formData.date, slots.length, formData.subject]);
 
-  // Add effect to clear slot selection if the selected slot becomes unavailable
+  // rooms with availability for selected slot
   useEffect(() => {
-    // If a slot is selected and it's now marked as booked, clear the selection
-    if (formData.slot && slots.some(s =>
-      s.number.toString() === formData.slot && s.isBooked
-    )) {
-      setFormData(prev => ({...prev, slot: ""}));
+    // Reset room selection when slot changes
+    setFormData(prev => ({...prev, room: ""}));
+
+    if (!formData.common || !formData.date || !formData.slot) {
+      setRooms([]);
+      return;
     }
-  }, [slots, formData.slot]);
+
+    setLoadingRooms(true);
+
+    const dateStr = format(formData.date, "yyyy-MM-dd");
+
+    // Get rooms with availability information for the selected time slot
+    fetch(`/api/bookings/rooms?common=${encodeURIComponent(formData.common)}&date=${encodeURIComponent(dateStr)}&slot=${encodeURIComponent(formData.slot)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setRooms(data);
+        else setRooms([]);
+      })
+      .catch(() => setRooms([]))
+      .finally(() => setLoadingRooms(false));
+  }, [formData.common, formData.date, formData.slot]);
 
   const handleChange = (key: string, value: string | Date | undefined) => {
     setFormData(prev => ({...prev, [key]: value}));
@@ -204,43 +227,45 @@ export function useBookingForm() {
           let subjectId = formData.subject;
           let line = "";
 
-          const lastHyphenIndex = formData.subject.lastIndexOf('-');
+          const lastHyphenIndex = formData.subject.lastIndexOf("-");
           if (lastHyphenIndex !== -1) {
             subjectId = formData.subject.substring(0, lastHyphenIndex);
             line = formData.subject.substring(lastHyphenIndex + 1);
           }
 
           const payload = {
-            ...formData,
             subject: subjectId,
             line,
-          };
+            common: formData.common,
+            room: formData.room,
+            date: formData.date ? format(formData.date, "yyyy-MM-dd") : undefined,
+            slot: formData.slot,
+            justification: formData.justification,
+          } as const;
 
-          const response = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+          const response = await fetch("/api/bookings", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload),
           });
 
           const result = await response.json();
 
           if (!response.ok) {
-            if (response.status === 409) { // Conflict status
-              throw new Error('This room is already booked for the selected time slot');
+            if (response.status === 409) {
+              throw new Error("This room is already booked for the selected time slot");
             }
-            throw new Error(result.error || 'Failed to create booking');
+            throw new Error(result.error || "Failed to create booking");
           }
 
-          setSlotRefreshTrigger(prev => prev + 1); // Trigger slot refresh
+          setSlotRefreshTrigger(prev => prev + 1);
 
-          if (opts?.onSuccess) {
-            opts.onSuccess();
-          }
+          if (opts?.onSuccess) opts.onSuccess();
 
-          router.push('/bookings/view');
-          return result; // Return result for the success message
+          router.push("/bookings/view");
+          return result;
         } catch (error) {
-          console.error('Error submitting booking:', error);
+          console.error("Error submitting booking:", error);
           Sentry.captureException(error);
 
           // rethrow to trigger the error toast
