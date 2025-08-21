@@ -181,7 +181,7 @@ export default function BookingPage() {
                         )}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span>Period {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})</span>
+                          <span>Slot {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})</span>
                           {slot.isBooked && (
                             <span
                               className="text-red-500 text-xs font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
