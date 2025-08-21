@@ -3,7 +3,7 @@ import {Calendar, ChevronLeft, ChevronRight} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardHeader} from "@/components/ui/card"
 import {TimetableEntry, type TimetableEntryProps} from "./TimetableEntry"
-import {addWeeks, differenceInDays, format, isSameWeek, subWeeks} from "date-fns"
+import {addWeeks, format, isSameWeek, subWeeks} from "date-fns"
 import { calculateTermAndWeek } from "@/lib/dateUtils"
 
 interface TimetableCardProps {
