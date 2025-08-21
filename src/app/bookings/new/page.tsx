@@ -110,33 +110,11 @@ export default function BookingPage() {
                 {loadingCommons && (
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary"/>
                 )}
-                {!formData.date && <p className="text-sm text-gray-500 mt-1">Please select a subject.</p>}
+                {!formData.subject && <p className="text-sm text-gray-500 mt-1">Please select a subject.</p>}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <MapPinIcon className="h-4 w-4 text-primary"/>Room
-              </Label>
-              <div className="relative">
-                <Select
-                  onValueChange={(val) => handleChange("room", val)}
-                  value={formData.room}
-                  disabled={!formData.common || rooms.length === 0 || loadingRooms}
-                >
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select room"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((room) => <SelectItem key={room} value={room}>{room}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {loadingRooms && (
-                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary"/>
-                )}
-              </div>
-            </div>
-
+            {/* Date Dropdown */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4 text-primary"/>Date
@@ -156,6 +134,7 @@ export default function BookingPage() {
               </Popover>
             </div>
 
+            {/* Time Dropdown */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <ClockIcon className="h-4 w-4 text-primary"/>Time Slot
@@ -180,13 +159,14 @@ export default function BookingPage() {
                           slot.isBooked && "text-muted-foreground bg-gray-100 cursor-not-allowed"
                         )}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span>Slot {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})</span>
+                        <div className="flex items-center justify-between w-full gap-2">
+                        <span
+                          className="truncate pr-2">Slot {slot.number} ({formatTime(slot.startTime)}-{formatTime(slot.endTime)})</span>
                           {slot.isBooked && (
                             <span
-                              className="text-red-500 text-xs font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
-                              Already Booked
-                            </span>
+                              className="text-red-500 text-xs font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-200 flex-shrink-0">
+                            Already Booked
+                          </span>
                           )}
                         </div>
                         {slot.isBooked &&
@@ -201,6 +181,55 @@ export default function BookingPage() {
                 )}
               </div>
               {!formData.date && <p className="text-sm text-gray-500 mt-1">Please select a date.</p>}
+              {formData.date && slots.length === 0 && !loadingSlots &&
+                  <p className="text-sm text-red-500 mt-1 font-medium">You have no classes on this day!</p>}
+            </div>
+
+            {/* Room Dropdown */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <MapPinIcon className="h-4 w-4 text-primary"/>Room
+              </Label>
+              <div className="relative">
+                <Select
+                  onValueChange={(val) => handleChange("room", val)}
+                  value={formData.room}
+                  disabled={!formData.common || !formData.slot || rooms.length === 0 || loadingRooms}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select room"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map((room) => (
+                      <SelectItem
+                        key={room.name}
+                        value={room.name}
+                        disabled={room.isBooked}
+                        className={cn(
+                          "relative",
+                          room.isBooked && "text-muted-foreground bg-gray-100 cursor-not-allowed"
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="truncate pr-2">{room.name}</span>
+                          {room.isBooked && (
+                            <span
+                              className="text-red-500 text-xs font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-200 flex-shrink-0">
+                            Already Booked
+                          </span>
+                          )}
+                        </div>
+                        {room.isBooked &&
+                            <div className="absolute inset-0 bg-gray-100 opacity-40 pointer-events-none"/>}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {loadingRooms && (
+                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-primary"/>
+                )}
+              </div>
+              {!formData.slot && <p className="text-sm text-gray-500 mt-1">Please select a time slot.</p>}
             </div>
 
             <div className="space-y-2">
@@ -229,5 +258,5 @@ export default function BookingPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
