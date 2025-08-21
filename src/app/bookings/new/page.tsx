@@ -38,8 +38,6 @@ export default function BookingPage() {
     })
   };
 
-  console.log("Current slots with booking status:", slots);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header/>

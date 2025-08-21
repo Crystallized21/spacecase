@@ -270,7 +270,6 @@ export async function GET(request: NextRequest) {
 
           if (!bookingError && bookings && bookings.length > 0) {
             bookedSlots = bookings.map(booking => Number(booking.period));
-            console.log(`Booked slots for room ${room} on ${formattedDate}:`, bookedSlots);
           }
         }
       } else {
@@ -302,7 +301,6 @@ export async function GET(request: NextRequest) {
         if (!bookingError && bookings && bookings.length > 0) {
           // Get unique booked periods
           bookedSlots = [...new Set(bookings.map(booking => Number(booking.period)))];
-          console.log(`All booked slots for date ${formattedDate}:`, bookedSlots);
         }
       }
     }
@@ -310,7 +308,6 @@ export async function GET(request: NextRequest) {
     // Format the data and include booking status
     const formattedSlots = data.map(slot => {
       const isSlotBooked = bookedSlots.includes(slot.slot_number);
-      console.log(`Slot ${slot.slot_number} booked status: ${isSlotBooked}`);
 
       return {
         id: slot.id,

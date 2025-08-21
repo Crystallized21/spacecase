@@ -105,7 +105,6 @@ export async function POST(request: NextRequest) {
       .eq("name", room)
       .eq("common_id", commonData.id)
       .single();
-    console.log("Room lookup result:", roomData, roomError);
 
     if (roomError || !roomData) {
       Sentry.addBreadcrumb({
