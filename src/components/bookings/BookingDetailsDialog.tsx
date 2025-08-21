@@ -5,7 +5,6 @@ import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/
 import {Skeleton} from "@/components/ui/skeleton";
 import {calculateTermAndWeek} from "@/lib/dateUtils";
 import {formatTime} from "@/lib/utils";
-import {useUser} from "@clerk/nextjs";
 import {format} from "date-fns";
 import {BookOpen, Calendar, Clock, FileText, MapPin, User} from "lucide-react";
 import {useEffect, useState} from "react";
