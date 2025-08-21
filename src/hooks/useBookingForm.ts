@@ -159,25 +159,19 @@ export function useBookingForm() {
         }
       }
 
-      console.log("Fetching slot booking status with URL:", url);
-
       fetch(url)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            console.log("Received updated slot data:", data);
-
             // Update slots with booking information
             setSlots(prev => {
               const updatedSlots = prev.map(slot => {
                 const updatedSlot = data.find(s => s.number === slot.number);
                 if (updatedSlot?.isBooked) {
-                  console.log(`Marking slot ${slot.number} as booked`);
                   return {...slot, isBooked: true};
                 }
                 return slot;
               });
-              console.log("Updated slots:", updatedSlots);
               return updatedSlots;
             });
           }
