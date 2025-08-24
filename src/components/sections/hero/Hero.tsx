@@ -33,8 +33,8 @@ export default function Hero({
   description = "A tool for teachers to simplify room management and scheduling at Ormiston Senior College.",
   mockup = (
     <Screenshot
-      srcLight="/app-light.png"
-      srcDark="/app-dark.png"
+      srcLight="/images/hero.png"
+      srcDark="/images/hero.png"
       alt="screenshot"
       width={1248}
       height={765}
