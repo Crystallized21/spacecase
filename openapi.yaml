@@ -1,0 +1,510 @@
+openapi: 3.1.0
+info:
+  title: SpaceCase API
+  description: API for managing teacher room bookings.
+  version: 1.0.0
+servers:
+  - url: 'https://spacecase.crystallized.sh/api'
+paths:
+  /bookings:
+    get:
+      summary: List all bookings
+      description: Returns a list of bookings with related user, room, commons and subject info.
+      security:
+        - clerkAuth: [ ]
+      responses:
+        200:
+          description: Successful response with array of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+              examples:
+                sample:
+                  value:
+                    - id: 123
+                      user_id: "user_abc"
+                      teacherName: "Jane Doe"
+                      teacherEmail: "jane.doe@example.com"
+                      date: "2025-11-01"
+                      time: 2
+                      notes: "Class review"
+                      room: "Puriri 7"
+                      commons: "Puriri"
+                      subject: "Computer Science 2"
+                      subjectCode: "CSC2"
+                      createdAt: "2025-10-28T10:12:34Z"
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a booking
+      description: Create a new booking for an authenticated user.
+      security:
+        - clerkAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreate'
+            examples:
+              createExample:
+                value:
+                  subject: "CALC3"
+                  room: "Pod"
+                  common: "Papatuanuku"
+                  date: "2025-11-01"
+                  slot: 2
+                  justification: "UEG Grade Exam"
+      responses:
+        201:
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  booking:
+                    $ref: '#/components/schemas/Booking'
+        400:
+          description: Validation error (missing required fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Related resource not found (user/common/room)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: Conflict — room already booked for the requested slot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/commons:
+    get:
+      summary: Get commons linked to a subject
+      description: Returns a list of common area names that have access to the specified subject.
+      parameters:
+        - name: subject
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Subject ID to filter commons
+      responses:
+        200:
+          description: Successful response with array of common names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                sample:
+                  value:
+                    - "Puriri"
+                    - "Papatuanuku"
+                    - "Pukeko"
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/rooms:
+    get:
+      summary: Get bookable rooms for a common
+      description: Returns a list of rooms in a common area with their booking availability for a specific date and slot.
+      parameters:
+        - name: common
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Common area name (required)
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Date to check availability (YYYY-MM-DD)
+        - name: slot
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Time slot number to check availability
+      responses:
+        200:
+          description: Successful response with array of rooms and their booking status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomAvailability'
+              examples:
+                sample:
+                  value:
+                    - name: "Room A"
+                      isBooked: false
+                    - name: "Room B"
+                      isBooked: true
+        400:
+          description: Missing required parameter (common)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Common not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/slots:
+    get:
+      summary: Get available time slots
+      description: Returns available time slots for a specific day, optionally filtered by subject, teacher line, room, and date bookings.
+      security:
+        - clerkAuth: [ ]
+      parameters:
+        - name: day
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" ]
+          description: Weekday name (required)
+        - name: subject
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Subject ID to filter slots for teacher's lines
+        - name: line
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Specific line number (requires subject parameter)
+        - name: room
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Room name to check booking conflicts
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Date to check for bookings (YYYY-MM-DD)
+      responses:
+        200:
+          description: Successful response with array of available slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSlot'
+              examples:
+                sample:
+                  value:
+                    - id: 1
+                      number: 1
+                      day: "Monday"
+                      startTime: "09:00"
+                      endTime: "10:00"
+                      isBooked: false
+                    - id: 2
+                      number: 2
+                      day: "Monday"
+                      startTime: "10:00"
+                      endTime: "11:00"
+                      isBooked: true
+        400:
+          description: Missing required parameter (day)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/subjects:
+    get:
+      summary: Get teacher's subjects
+      description: Returns a list of subjects assigned to the authenticated teacher with their line numbers.
+      security:
+        - clerkAuth: [ ]
+      responses:
+        200:
+          description: Successful response with array of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherSubject'
+              examples:
+                sample:
+                  value:
+                    - id: "subj_001"
+                      name: "Mathematics (Line 1)"
+                      code: "MATH1"
+                      line: 1
+                    - id: "subj_002"
+                      name: "Mathematics (Line 2)"
+                      code: "MATH2"
+                      line: 2
+        401:
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: User not found in database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /webhooks:
+    post:
+      summary: Handle Clerk user creation webhook
+      description: Webhook endpoint for Clerk user.created events. Automatically syncs teacher users to Supabase.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [ "user.created" ]
+                data:
+                  $ref: '#/components/schemas/ClerkUser'
+      responses:
+        200:
+          description: Webhook received and processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Webhook received"
+        400:
+          description: Webhook verification failed or invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    clerkAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Use Clerk session token, e.g. "Bearer <token>" or other configured auth header.
+
+  schemas:
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Database primary key
+        user_id:
+          type: string
+          description: Application user id (from users table)
+        teacherName:
+          type: string
+        teacherEmail:
+          type: string
+          format: email
+        date:
+          type: string
+          format: date
+          description: YYYY-MM-DD
+        time:
+          type: integer
+          description: Period/slot number
+        notes:
+          type: string
+          nullable: true
+        room:
+          type: string
+        commons:
+          type: string
+        subject:
+          type: string
+        subjectCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    BookingCreate:
+      type: object
+      required:
+        - subject
+        - room
+        - common
+        - date
+        - slot
+      properties:
+        subject:
+          type: string
+          description: Subject identifier (id or code depending on implementation)
+        room:
+          type: string
+          description: Room name
+        common:
+          type: string
+          description: Common area name (used to resolve common_id)
+        date:
+          type: string
+          format: date
+          description: Booking date in YYYY-MM-DD
+        slot:
+          type: integer
+          description: Period/slot number
+        justification:
+          type: string
+          nullable: true
+          description: Optional justification/notes for the booking
+
+    RoomAvailability:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Room name
+        isBooked:
+          type: boolean
+          description: Whether the room is booked for the requested date and slot
+
+    TimeSlot:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Slot times table primary key
+        number:
+          type: integer
+          description: Slot/period number
+        day:
+          type: string
+          description: Weekday name
+        startTime:
+          type: string
+          format: time
+          description: Start time (HH:MM)
+        endTime:
+          type: string
+          format: time
+          description: End time (HH:MM)
+        isBooked:
+          type: boolean
+          description: Whether this slot is already booked for the specified date
+
+    TeacherSubject:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Subject ID
+        name:
+          type: string
+          description: Subject name with line number (e.g., "Mathematics (Line 1)")
+        code:
+          type: string
+          description: Subject code
+        line:
+          type: integer
+          description: Line/class number
+
+    ClerkUser:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Clerk user ID
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email_addresses:
+          type: array
+          items:
+            type: object
+            properties:
+              email_address:
+                type: string
+                format: email
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+          nullable: true
+        conflict:
+          type: boolean
+          nullable: true
