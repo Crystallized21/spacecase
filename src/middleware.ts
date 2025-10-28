@@ -1,10 +1,19 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkClient, clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/api(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    const { userId } = await auth.protect();
+
+    if (userId) {
+      const user = await (await clerkClient()).users.getUser(userId);
+      const email = user.emailAddresses[0]?.emailAddress || '';
+
+      if (!email.endsWith('@ormiston.school.nz')) {
+        return new Response('Unauthorized', { status: 403 });
+      }
+    }
   }
 });
 
